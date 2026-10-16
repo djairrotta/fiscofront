@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    image: fisco-web:latest
+    restart: unless-stopped
+    env_file: .env
+    ports: ["3001:3001"]
+    networks: [judinfo]
+networks:
+  judinfo:
+    external: true

@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Tokens. Nenhum hex vive em componente.
+   Uma cor de destaque: petroleo. Ver DESIGN.md para o porque.
+   --------------------------------------------------------------- */
+@theme {
+  --color-acento: #0F5B56;
+  --color-acento-claro: #14807A;
+  --color-acento-fundo: #E6F2F1;
+  --color-tinta: #0B0F14;
+  --color-aco: #4A5863;
+  --color-linha: #DFE4E8;
+  --color-papel: #FFFFFF;
+  --color-fundo: #F7F9FA;
+
+  --radius-superficie: 10px;
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --ease-entrada: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-saida: cubic-bezier(0.6, 0, 0.9, 0.35);
+}
+
+:root {
+  color-scheme: light;
+  --sombra-cartao: 0 1px 2px rgb(11 15 20 / 0.04), 0 8px 24px -12px rgb(11 15 20 / 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="light"]) {
+    color-scheme: dark;
+    --color-tinta: #E8EDF0;
+    --color-aco: #94A3AE;
+    --color-linha: #1E2730;
+    --color-papel: #111820;
+    --color-fundo: #0B0F14;
+    --color-acento-fundo: #0D2B29;
+    --sombra-cartao: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
+  }
+}
+:root[data-tema="dark"] {
+  color-scheme: dark;
+  --color-tinta: #E8EDF0; --color-aco: #94A3AE; --color-linha: #1E2730;
+  --color-papel: #111820; --color-fundo: #0B0F14; --color-acento-fundo: #0D2B29;
+}
+
+body {
+  background: var(--color-fundo);
+  color: var(--color-tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Superficies do navegador tematizadas: o sinal mais barato de pagina
+   construida em vez de montada. */
+::selection { background: var(--color-acento); color: #fff; }
+:focus-visible { outline: 2px solid var(--color-acento); outline-offset: 2px; border-radius: 4px; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb { background: var(--color-linha); border-radius: 99px;
+  border: 3px solid var(--color-fundo); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-aco); }
+::-webkit-scrollbar-track { background: var(--color-fundo); }
+
+/* Botao "liquido": brilho vem de gradiente + borda interna de 1px,
+   nunca de glow colorido. */
+.botao-liquido {
+  background-image: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-acento) 88%, white) 0%,
+    var(--color-acento) 48%,
+    color-mix(in oklab, var(--color-acento) 92%, black) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.12),
+    0 1px 2px rgb(11 15 20 / 0.16),
+    0 6px 16px -8px color-mix(in oklab, var(--color-acento) 55%, transparent);
+  transition: transform 180ms var(--ease-entrada), box-shadow 180ms var(--ease-entrada);
+}
+.botao-liquido:hover { transform: translateY(-1px); }
+.botao-liquido:active { transform: translateY(0) scale(0.985); }
+
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
