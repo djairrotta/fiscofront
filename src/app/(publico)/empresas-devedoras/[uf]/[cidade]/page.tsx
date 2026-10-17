@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listarUfs, listarMunicipios, buscarMunicipio } from "@/lib/dados";
 import { slug, brl, num, posicao } from "@/lib/formato";
+import { DadosEstruturados, conjuntoDados, trilha } from "@/componentes/DadosEstruturados";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 export const dynamicParams = true;   // 5.570 paginas: as menores entram sob demanda
 
 /**
@@ -60,7 +61,20 @@ export default async function PaginaCidade(
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <>
+      <DadosEstruturados json={conjuntoDados({
+        nome: `Dívida ativa inscrita de empresas em ${m.municipio} (${uf.toUpperCase()})`,
+        descricao: `Empresas com inscrição em dívida ativa da União em ${m.municipio}, `
+          + `com valor consolidado por tributo. Fonte: PGFN e Receita Federal.`,
+        url: `/empresas-devedoras/${uf}/${slug(m.municipio)}`,
+        dataRef: m.data_referencia,
+      })} />
+      <DadosEstruturados json={trilha([
+        { nome: 'Empresas devedoras', url: '/empresas-devedoras' },
+        { nome: uf.toUpperCase(), url: `/empresas-devedoras/${uf}` },
+        { nome: m.municipio, url: `/empresas-devedoras/${uf}/${slug(m.municipio)}` },
+      ])} />
+      <main className="mx-auto max-w-4xl px-6 py-12">
       <script type="application/ld+json"
               dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <nav className="text-sm text-aco">
@@ -115,7 +129,7 @@ export default async function PaginaCidade(
         </p>
         <Link href="/planos"
               className="mt-4 inline-block botao-liquido inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold text-white">
-          Ver planos — a partir de R$ 49/mês
+          Ver planos, a partir de R$ 49 por mês
         </Link>
       </div>
 
@@ -124,5 +138,6 @@ export default async function PaginaCidade(
         devedor principal, {posicao(m.data_referencia)}.
       </p>
     </main>
+    </>
   );
 }

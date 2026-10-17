@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { listarUfs } from "@/lib/dados";
+import { listarUfs, listarFontes } from "@/lib/dados";
 import { brl, num, posicao } from "@/lib/formato";
 
 export const dynamic = "force-dynamic";
 
 /** Visao geral. Densidade alta: numero e tabela, pouco espaco morto. */
 export default async function Painel() {
-  const ufs = await listarUfs();
+  const [ufs, fontes] = await Promise.all([listarUfs(), listarFontes()]);
   const divida = ufs.reduce((s, u) => s + Number(u.divida_total || 0), 0);
   const devedoras = ufs.reduce((s, u) => s + Number(u.empresas_com_divida || 0), 0);
   const ref = ufs[0]?.data_referencia ?? null;
@@ -66,6 +66,49 @@ export default async function Painel() {
           </table>
         )}
       </section>
+
+      {/* Frescor das bases. Numero sem data de posicao nao vale nada para
+          advogado: ele precisa saber de quando e o dado antes de ligar. */}
+      {fontes.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold">Fontes de dados</h2>
+          <table className="mt-3 w-full text-sm">
+            <thead>
+              <tr className="border-b border-linha text-left text-xs text-aco">
+                <th className="pb-2 font-medium">Base</th>
+                <th className="pb-2 font-medium">Periodicidade</th>
+                <th className="pb-2 font-medium">Carregado</th>
+                <th className="pb-2 font-medium">Publicado</th>
+                <th className="pb-2 text-right font-medium">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fontes.map((f) => {
+                const atrasada = !!f.versao_disponivel && f.versao_carregada !== f.versao_disponivel;
+                const situacao = f.ultimo_erro ? "falhou"
+                  : f.periodicidade === "sob_demanda" ? "sob demanda"
+                  : atrasada ? "atualização pendente"
+                  : f.versao_carregada ? "em dia" : "não carregada";
+                return (
+                  <tr key={f.chave} className="border-b border-linha">
+                    <td className="py-2.5 font-medium">{f.rotulo}</td>
+                    <td className="py-2.5 text-aco">{f.periodicidade.replace("_", " ")}</td>
+                    <td className="py-2.5 font-mono tabular text-aco">{f.versao_carregada ?? "-"}</td>
+                    <td className="py-2.5 font-mono tabular text-aco">{f.versao_disponivel ?? "-"}</td>
+                    <td className="py-2.5 text-right">
+                      <span className={
+                        situacao === "falhou" ? "text-red-700"
+                        : situacao === "atualização pendente" ? "text-amber-700"
+                        : situacao === "em dia" ? "text-emerald-700" : "text-aco"
+                      }>{situacao}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      )}
     </div>
   );
 }

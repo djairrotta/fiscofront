@@ -10,12 +10,14 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
           <Link href="/" className="text-[15px] font-semibold tracking-tight">fisco</Link>
           <nav className="hidden items-center gap-6 text-sm text-aco md:flex">
             <Link href="/empresas-devedoras" className="hover:text-tinta">Dados por cidade</Link>
+            <Link href="/#recursos" className="hover:text-tinta">Recursos</Link>
             <Link href="/#teses" className="hover:text-tinta">Teses</Link>
             <Link href="/#planos" className="hover:text-tinta">Planos</Link>
+            <Link href="/#duvidas" className="hover:text-tinta">Dúvidas</Link>
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <Link href="/app" className="hidden text-sm text-aco hover:text-tinta sm:block">Entrar</Link>
-            <Botao href="/#planos">Começar</Botao>
+            <Botao href="/#planos">Assinar</Botao>
           </div>
         </div>
       </header>

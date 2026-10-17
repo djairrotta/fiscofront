@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Marca: tres blocos do cartograma em degrau, o mesmo motivo do mapa.
+       Em 16px o degrau ainda le; um mapa do Brasil inteiro viraria borrao. -->
+  <rect width="32" height="32" rx="7" fill="#0F5B56"/>
+  <g fill="#fff">
+    <rect x="7"  y="17" width="6" height="8"  rx="1.2" opacity=".55"/>
+    <rect x="14" y="12" width="6" height="13" rx="1.2" opacity=".8"/>
+    <rect x="21" y="7"  width="6" height="18" rx="1.2"/>
+  </g>
+</svg>

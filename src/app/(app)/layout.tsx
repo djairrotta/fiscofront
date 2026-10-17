@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { RegistraSW } from "@/componentes/RegistraSW";
+import { Sair } from "@/componentes/Sair";
 
 export const metadata: Metadata = {
   title: { default: "Painel", template: "%s · fisco" },
@@ -34,6 +35,9 @@ export default function LayoutApp({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
+          <div className="mt-6 border-t border-linha pt-3">
+            <Sair />
+          </div>
         </div>
       </aside>
 

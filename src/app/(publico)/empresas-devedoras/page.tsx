@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { listarUfs } from "@/lib/dados";
 import { brl, num, posicao } from "@/lib/formato";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Empresas com dívida ativa por estado",
   description:
