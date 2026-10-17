@@ -18,7 +18,7 @@ import { SeletorCidades } from "@/componentes/app/SeletorCidades";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 const CHAVES = ["q", "uf", "municipio", "valor_min", "valor_max", "tributo", "ajuizada", "contato", "cnae", "ativa", "desde", "ate", "ordem", "pagina",
-  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max", "estadual"] as const;
+  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max", "estadual", "programa", "acordo"] as const;
 const REGIMES = [["mei", "MEI"], ["simples", "Simples"], ["demais", "Fora do Simples"]] as const;
 const PORTES = [["1", "ME"], ["3", "EPP"], ["5", "Demais"]] as const;
 const ROTULO_REGIME: Record<string, string> = { mei: "MEI", simples: "Simples", demais: "fora do Simples" };
@@ -190,6 +190,26 @@ function Conteudo() {
             </Selecao>
           </div>
           <div>
+            <Rotulo>Acordo com a PGFN</Rotulo>
+            <Selecao value={rascunho.acordo} onChange={(e) => r("acordo", e.target.value)}>
+              <option value="">Tanto faz</option>
+              <option value="rescindido">Parcelamento rescindido</option>
+              <option value="sem_acordo">Sem acordo em curso</option>
+              <option value="negociado">Com acordo em curso</option>
+            </Selecao>
+          </div>
+          <div>
+            <Rotulo>Pode caber em</Rotulo>
+            <Selecao value={rascunho.programa} onChange={(e) => r("programa", e.target.value)}>
+              <option value="">Qualquer programa</option>
+              <option value="pequeno_valor">Transação de pequeno valor (PGFN)</option>
+              <option value="dificil">Difícil recuperação (PGFN)</option>
+              <option value="fgts">Transação do FGTS (PGFN)</option>
+              <option value="individual">Transação individual (acima de R$ 1 mi)</option>
+              <option value="recuperacao">Em recuperação judicial</option>
+            </Selecao>
+          </div>
+          <div>
             <Rotulo>Dívida estadual (SP)</Rotulo>
             <Selecao value={rascunho.estadual} onChange={(e) => r("estadual", e.target.value)}>
               <option value="">Tanto faz</option>
@@ -309,6 +329,8 @@ function Conteudo() {
                         {e.qtd_socios != null && <span>{e.qtd_socios} sócio{e.qtd_socios == 1 ? "" : "s"}</span>}
                         {e.tem_ajuizada && <Selo tom="alerta">ajuizada</Selo>}
                         {e.estadual_sp && <Selo tom="perigo">estadual SP</Selo>}
+                        {Number(e.qtd_rescindidas) > 0 && <Selo tom="perigo">parcelamento rescindido</Selo>}
+                        {Number(e.qtd_negociadas) > 0 && Number(e.qtd_negociadas) === Number(e.qtd_inscricoes) && <Selo tom="ok">tudo negociado</Selo>}
                         {e.e_lead && <Selo tom="acento"><Check size={10} /> lead</Selo>}
                       </div>
                     </td>

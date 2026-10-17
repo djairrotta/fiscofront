@@ -100,6 +100,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
         </div>
       )}
 
+      {d.programas?.length > 0 && <ComoRegularizar programas={d.programas} />}
+
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-4">
           {/* Abas */}
@@ -331,5 +333,39 @@ function DividaEstadual({ cnpj, ufSugerida }: { cnpj: string; ufSugerida?: strin
         {!uf && <p className="text-xs leading-relaxed text-aco">SP e MG não publicam a lista de devedores; a consulta é por CNPJ, feita quando você clica.</p>}
       </div>
     </Superficie>
+  );
+}
+
+/** Programas de transacao/parcelamento que cabem para esta empresa (triagem). */
+function ComoRegularizar({ programas }: { programas: any[] }) {
+  const ORG: Record<string, string> = { PGFN: "PGFN", PGE_SP: "PGE-SP", AGE_MG: "AGE-MG" };
+  return (
+    <section className="mt-4 rounded-[10px] border border-linha bg-papel">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-linha px-4 py-3">
+        <h2 className="text-sm font-semibold">Como regularizar</h2>
+        <Link href="/app/acordos" className="text-xs text-acento hover:underline dark:text-acento-claro">todos os acordos e parcelamentos</Link>
+      </header>
+      <ul className="divide-y divide-linha">
+        {programas.map((p) => (
+          <li key={p.slug} className="grid gap-2 px-4 py-3 text-sm md:grid-cols-[1fr_auto]">
+            <div className="min-w-0">
+              <p className="font-medium">{p.nome} <span className="text-xs font-normal text-aco">· {ORG[p.orgao]}</span></p>
+              <p className="mt-0.5 text-xs text-aco">
+                {p.estado === "aberto" ? <b className="font-medium text-amber-800 dark:text-amber-300">adesão até {dataBr(p.adesao_fim)} ({p.dias} dias)</b> : "disponível a qualquer tempo"}
+                {p.motivos?.length > 0 && <> · {p.motivos.join(" · ")}</>}
+              </p>
+              {p.confirmar?.length > 0 && <p className="mt-0.5 flex items-start gap-1 text-xs text-aco"><Warning size={12} className="mt-0.5 shrink-0" /> {p.confirmar.join(" · ")}</p>}
+            </div>
+            {p.desconto_teto_valor != null && (
+              <div className="text-right">
+                <p className="font-mono font-semibold tabular">até {brl(p.desconto_teto_valor, true)}</p>
+                <p className="text-[11px] text-aco">teto de {Math.round(p.desconto_teto * 100)}% sobre {brl(p.valor_abrangido, true)}</p>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="border-t border-linha px-4 py-2 text-[11px] text-aco">Triagem com o dado público. O teto é o limite legal; o desconto efetivo depende da classificação do devedor e do edital.</p>
+    </section>
   );
 }

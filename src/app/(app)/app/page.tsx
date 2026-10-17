@@ -24,6 +24,8 @@ export default function Painel() {
   const [uf, setUf] = useState<string | null>(null);
   const painel = useQuery({ queryKey: ["painel", uf], queryFn: () => api(`/painel${qs({ uf })}`) });
   const funil = useQuery({ queryKey: ["leads-resumo"], queryFn: () => api("/leads-resumo") });
+  const programas = useQuery({ queryKey: ["programas"], queryFn: () => api<any[]>("/programas"), staleTime: 3600_000 });
+  const abertos = (programas.data ?? []).filter((p) => p.estado === "aberto").sort((a, b) => a.dias - b.dias);
   const d: any = painel.data;
   const ir = (f: Record<string, unknown>) => router.push(`/app/pesquisa${qs({ uf, ...f })}`);
 
@@ -47,6 +49,23 @@ export default function Painel() {
 
       <div className="mt-5"><AvisoErro erro={painel.error} /></div>
 
+      {abertos.length > 0 && (
+        <Link href="/app/acordos" className="mt-4 block rounded-[10px] border border-linha bg-papel px-5 py-4 hover:bg-acento-fundo/40">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-semibold">{abertos.length} programas de transação com adesão aberta</p>
+            <span className="text-xs text-acento dark:text-acento-claro">Acordos e parcelamentos →</span>
+          </div>
+          <ul className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+            {abertos.slice(0, 4).map((p) => (
+              <li key={p.slug} className="flex justify-between gap-3">
+                <span className="truncate text-aco">{p.nome}</span>
+                <span className="shrink-0 font-mono text-xs tabular">até {dataBr(p.adesao_fim)}</span>
+              </li>
+            ))}
+          </ul>
+        </Link>
+      )}
+
       {/* Indicadores */}
       <div className="mt-4 grid gap-px overflow-hidden rounded-[10px] border border-linha bg-linha sm:grid-cols-2 lg:grid-cols-4">
         {painel.isLoading ? [0, 1, 2, 3].map((i) => <div key={i} className="bg-papel p-5"><Esqueleto className="h-10" /></div>) : d && (
@@ -57,8 +76,10 @@ export default function Painel() {
               detalhe={Number(d.totais.com_contato) > 0 ? `${num(d.totais.com_contato)} com telefone ou e-mail na base` : "contato consultado na ficha, por CNPJ"} />
             <Indicador rotulo="Já ajuizada" valor={brl(d.totais.valor_ajuizado, true)}
               detalhe={`${num(d.totais.empresas_ajuizadas)} empresas com execução`} />
-            <Indicador rotulo="Ainda não ajuizada" valor={brl(Number(d.totais.valor_total) - Number(d.totais.valor_ajuizado), true)}
-              detalhe="espaço para transação e defesa administrativa" />
+            <button type="button" onClick={() => ir({ acordo: "rescindido" })} className="cursor-pointer text-left hover:bg-acento-fundo/40">
+              <Indicador rotulo="Parcelamento rescindido" valor={num(d.totais.com_rescisao ?? 0)}
+                detalhe={`empresas com acordo que caiu · ${num(d.totais.sem_acordo ?? 0)} sem acordo nenhum`} />
+            </button>
           </>
         )}
       </div>

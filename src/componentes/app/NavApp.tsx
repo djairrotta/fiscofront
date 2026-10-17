@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChartBar, MagnifyingGlass, Kanban, GitFork, Columns, NotePencil, MapTrifold, Scales, FileText,
+  ChartBar, MagnifyingGlass, Kanban, GitFork, Columns, NotePencil, MapTrifold, Scales, FileText, Handshake,
 } from "@phosphor-icons/react";
 import { Sair } from "@/componentes/Sair";
 
@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/app/pesquisa", rotulo: "Pesquisa", Icone: MagnifyingGlass },
   { href: "/app/leads", rotulo: "Leads", Icone: Kanban },
   { href: "/app/cruzamentos", rotulo: "Cruzamentos", Icone: GitFork },
+  { href: "/app/acordos", rotulo: "Acordos", Icone: Handshake },
   { href: "/app/quadros", rotulo: "Quadros", Icone: Columns },
   { href: "/app/notas", rotulo: "Notas", Icone: NotePencil },
   { href: "/app/mapa", rotulo: "Mapa", Icone: MapTrifold },
