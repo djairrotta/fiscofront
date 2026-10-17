@@ -1,13 +1,3 @@
-export const metadata = { title: "Empresas" };
-
-export default function Pagina() {
-  return (
-    <div className="p-5 md:p-8">
-      <h1 className="text-xl font-semibold tracking-tight">Empresas</h1>
-      <div className="mt-5 rounded-[10px] border border-dashed border-linha p-10 text-center">
-        <p className="text-sm font-medium">Em construção</p>
-        <p className="mx-auto mt-1 max-w-md text-sm text-aco">Lista com CNPJ, dívida por tributo, processos e teses aplicáveis.</p>
-      </div>
-    </div>
-  );
-}
+import { redirect } from "next/navigation";
+// A lista de empresas virou a Pesquisa; links antigos continuam valendo.
+export default function Pagina() { redirect("/app/pesquisa"); }

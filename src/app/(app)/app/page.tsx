@@ -1,113 +1,172 @@
+"use client";
+/**
+ * Painel interativo. Tudo clicavel leva a pesquisa ja filtrada: o painel
+ * e a porta de entrada da prospeccao, nao um relatorio para olhar.
+ */
 import Link from "next/link";
-import { listarUfs, listarFontes } from "@/lib/dados";
-import { brl, num, posicao } from "@/lib/formato";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, X } from "@phosphor-icons/react";
+import { api, qs } from "@/lib/api";
+import { brl, num, posicao, dataBr, COR_FASE } from "@/lib/formato";
+import { GraficoBarras, MapaUfs } from "@/componentes/app/Graficos";
+import { AvisoErro, Esqueleto, Indicador, Superficie } from "@/componentes/app/ui";
 
-export const dynamic = "force-dynamic";
+const FAIXAS: Record<string, [number | null, number | null]> = {
+  "até 10 mil": [null, 10000], "10 a 50 mil": [10000, 50000], "50 a 100 mil": [50000, 100000],
+  "100 a 500 mil": [100000, 500000], "500 mil a 1 mi": [500000, 1000000], "1 a 5 mi": [1000000, 5000000],
+  "5 a 50 mi": [5000000, 50000000], "acima de 50 mi": [50000000, null],
+};
 
-/** Visao geral. Densidade alta: numero e tabela, pouco espaco morto. */
-export default async function Painel() {
-  const [ufs, fontes] = await Promise.all([listarUfs(), listarFontes()]);
-  const divida = ufs.reduce((s, u) => s + Number(u.divida_total || 0), 0);
-  const devedoras = ufs.reduce((s, u) => s + Number(u.empresas_com_divida || 0), 0);
-  const ref = ufs[0]?.data_referencia ?? null;
-  const topo = [...ufs].sort((a, b) => Number(b.divida_total) - Number(a.divida_total)).slice(0, 8);
+export default function Painel() {
+  const router = useRouter();
+  const [uf, setUf] = useState<string | null>(null);
+  const painel = useQuery({ queryKey: ["painel", uf], queryFn: () => api(`/painel${qs({ uf })}`) });
+  const funil = useQuery({ queryKey: ["leads-resumo"], queryFn: () => api("/leads-resumo") });
+  const d: any = painel.data;
+  const ir = (f: Record<string, unknown>) => router.push(`/app/pesquisa${qs({ uf, ...f })}`);
 
   return (
-    <div className="p-5 md:p-8">
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">Visão geral</h1>
-        <p className="text-xs text-aco">{posicao(ref)}</p>
+    <div className="mx-auto max-w-[1400px] p-5 md:p-8">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Painel</h1>
+          <p className="mt-0.5 text-sm text-aco">
+            Dívida ativa federal de empresas {uf ? `em ${uf}` : "no Brasil"}
+            {d?.totais?.data_referencia && <> · {posicao(d.totais.data_referencia)}</>}
+          </p>
+        </div>
+        {uf && (
+          <button type="button" onClick={() => setUf(null)}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-linha bg-papel px-3 py-1 text-sm hover:bg-acento-fundo">
+            {uf} <X size={13} />
+          </button>
+        )}
       </header>
 
-      <div className="mt-5 grid gap-px overflow-hidden rounded-[10px] border border-linha bg-linha sm:grid-cols-3">
-        {[
-          { r: "Dívida inscrita mapeada", v: brl(divida, true) },
-          { r: "Empresas devedoras", v: num(devedoras) },
-          { r: "Peças geradas no ciclo", v: "0 de 30" },
-        ].map((x) => (
-          <div key={x.r} className="bg-papel px-5 py-4">
-            <p className="text-xs text-aco">{x.r}</p>
-            <p className="mt-1 font-mono text-xl font-semibold tabular">{x.v}</p>
-          </div>
-        ))}
+      <div className="mt-5"><AvisoErro erro={painel.error} /></div>
+
+      {/* Indicadores */}
+      <div className="mt-4 grid gap-px overflow-hidden rounded-[10px] border border-linha bg-linha sm:grid-cols-2 lg:grid-cols-4">
+        {painel.isLoading ? [0, 1, 2, 3].map((i) => <div key={i} className="bg-papel p-5"><Esqueleto className="h-10" /></div>) : d && (
+          <>
+            <Indicador rotulo="Dívida inscrita" valor={brl(d.totais.valor_total, true)}
+              detalhe={`${num(d.totais.inscricoes)} inscrições`} />
+            <Indicador rotulo="Empresas devedoras" valor={num(d.totais.empresas)}
+              detalhe={Number(d.totais.com_contato) > 0 ? `${num(d.totais.com_contato)} com telefone ou e-mail na base` : "contato consultado na ficha, por CNPJ"} />
+            <Indicador rotulo="Já ajuizada" valor={brl(d.totais.valor_ajuizado, true)}
+              detalhe={`${num(d.totais.empresas_ajuizadas)} empresas com execução`} />
+            <Indicador rotulo="Ainda não ajuizada" valor={brl(Number(d.totais.valor_total) - Number(d.totais.valor_ajuizado), true)}
+              detalhe="espaço para transação e defesa administrativa" />
+          </>
+        )}
       </div>
 
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold">Onde há mais oportunidade</h2>
-          <Link href="/app/mapa" className="text-xs text-acento hover:underline">Abrir o mapa</Link>
-        </div>
-        {topo.length === 0 ? (
-          <div className="mt-3 rounded-[10px] border border-dashed border-linha p-8 text-center">
-            <p className="text-sm font-medium">Nenhum dado carregado ainda</p>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-aco">
-              Rode a carga da PGFN no backend e atualize as views. Os números aparecem aqui
-              assim que a primeira base entrar.
-            </p>
+      <div className="mt-4 grid gap-4 lg:grid-cols-[340px_1fr] [&>*]:min-w-0">
+        <Superficie titulo="Por estado" acao={<span className="text-xs text-aco">clique para filtrar</span>}>
+          <div className="p-4">
+            {d ? <MapaUfs dados={d.por_uf} selecionada={uf} aoEscolher={setUf} /> : <Esqueleto className="h-72" />}
           </div>
-        ) : (
-          <table className="mt-3 w-full text-sm">
-            <thead>
-              <tr className="border-b border-linha text-left text-xs text-aco">
-                <th className="pb-2 font-medium">Estado</th>
-                <th className="pb-2 text-right font-medium">Devedoras</th>
-                <th className="pb-2 text-right font-medium">Inscrito</th>
-              </tr>
-            </thead>
+        </Superficie>
+
+        <Superficie titulo="Tamanho da dívida por empresa" acao={<span className="text-xs text-aco">nº de empresas por faixa</span>}>
+          <div className="p-4">
+            {d ? (
+              <GraficoBarras dados={d.faixas} x="faixa" y="empresas" formatar={(v) => num(v)}
+                aoClicar={(l) => { const [a, b] = FAIXAS[l.faixa] ?? []; ir({ valor_min: a, valor_max: b }); }} />
+            ) : <Esqueleto className="h-60" />}
+          </div>
+        </Superficie>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <Superficie titulo="Ano da inscrição mais antiga" acao={<span className="text-xs text-aco">dívida total por ano</span>}>
+          <div className="p-4">
+            {d ? <GraficoBarras dados={d.por_ano} x="ano" y="valor_total"
+              aoClicar={(l) => ir({ desde: l.ano, ate: l.ano })} /> : <Esqueleto className="h-60" />}
+          </div>
+        </Superficie>
+        <Superficie titulo="Por tributo principal">
+          <div className="p-4">
+            {d ? <GraficoBarras dados={d.por_tributo} x="tributo" y="valor_total" horizontal
+              altura={Math.max(120, d.por_tributo.length * 34)} aoClicar={(l) => ir({ tributo: l.tributo })} /> : <Esqueleto className="h-60" />}
+          </div>
+        </Superficie>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
+        <Superficie titulo="Maiores devedoras"
+          acao={<Link href={`/app/pesquisa${qs({ uf })}`} className="inline-flex items-center gap-1 text-xs text-acento hover:underline dark:text-acento-claro">Ver todas <ArrowRight size={12} /></Link>}>
+          <table className="w-full text-sm">
             <tbody>
-              {topo.map((u) => (
-                <tr key={u.uf} className="border-b border-linha transition-colors hover:bg-acento-fundo/40">
-                  <td className="py-2.5 font-medium">{u.uf}</td>
-                  <td className="py-2.5 text-right font-mono tabular text-aco">{num(u.empresas_com_divida)}</td>
-                  <td className="py-2.5 text-right font-mono tabular">{brl(u.divida_total, true)}</td>
+              {(d?.top_devedores ?? []).map((e: any) => (
+                <tr key={e.cnpj_raiz} className="cursor-pointer border-b border-linha last:border-0 hover:bg-acento-fundo/40"
+                  onClick={() => router.push(`/app/empresas/${e.cnpj}`)}>
+                  <td className="w-full max-w-0 px-4 py-2.5">
+                    <p className="truncate font-medium">{e.nome}</p>
+                    <p className="truncate text-xs text-aco">{[e.municipio, e.uf].filter(Boolean).join(" · ")} · {e.tributo_principal}</p>
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono tabular">{brl(e.valor_total, true)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </section>
+          {!d && <div className="p-4"><Esqueleto className="h-48" /></div>}
+        </Superficie>
 
-      {/* Frescor das bases. Numero sem data de posicao nao vale nada para
-          advogado: ele precisa saber de quando e o dado antes de ligar. */}
-      {fontes.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-semibold">Fontes de dados</h2>
-          <table className="mt-3 w-full text-sm">
-            <thead>
-              <tr className="border-b border-linha text-left text-xs text-aco">
-                <th className="pb-2 font-medium">Base</th>
-                <th className="pb-2 font-medium">Periodicidade</th>
-                <th className="pb-2 font-medium">Carregado</th>
-                <th className="pb-2 font-medium">Publicado</th>
-                <th className="pb-2 text-right font-medium">Situação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fontes.map((f) => {
-                const atrasada = !!f.versao_disponivel && f.versao_carregada !== f.versao_disponivel;
-                const situacao = f.ultimo_erro ? "falhou"
-                  : f.periodicidade === "sob_demanda" ? "sob demanda"
-                  : atrasada ? "atualização pendente"
-                  : f.versao_carregada ? "em dia" : "não carregada";
-                return (
-                  <tr key={f.chave} className="border-b border-linha">
-                    <td className="py-2.5 font-medium">{f.rotulo}</td>
-                    <td className="py-2.5 text-aco">{f.periodicidade.replace("_", " ")}</td>
-                    <td className="py-2.5 font-mono tabular text-aco">{f.versao_carregada ?? "-"}</td>
-                    <td className="py-2.5 font-mono tabular text-aco">{f.versao_disponivel ?? "-"}</td>
-                    <td className="py-2.5 text-right">
-                      <span className={
-                        situacao === "falhou" ? "text-red-700"
-                        : situacao === "atualização pendente" ? "text-amber-700"
-                        : situacao === "em dia" ? "text-emerald-700" : "text-aco"
-                      }>{situacao}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
+        <div className="space-y-4">
+          <Superficie titulo="Seu funil"
+            acao={<Link href="/app/leads" className="inline-flex items-center gap-1 text-xs text-acento hover:underline dark:text-acento-claro">Abrir leads <ArrowRight size={12} /></Link>}>
+            <ul className="divide-y divide-linha">
+              {(funil.data as any)?.fases?.map((f: any) => (
+                <li key={f.valor} className="flex items-center justify-between px-4 py-2 text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${COR_FASE[f.cor] ?? "bg-slate-400"}`} />{f.rotulo}
+                  </span>
+                  <span className="font-mono tabular text-aco">{num(f.leads)} · {brl(f.divida, true)}</span>
+                </li>
+              ))}
+            </ul>
+          </Superficie>
+          {(funil.data as any)?.proximos?.length > 0 && (
+            <Superficie titulo="Próximos passos">
+              <ul className="divide-y divide-linha">
+                {(funil.data as any).proximos.map((p: any) => (
+                  <li key={p.id}>
+                    <Link href={`/app/leads?lead=${p.id}`} className="flex items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-acento-fundo/40">
+                      <span className="min-w-0"><span className="block truncate font-medium">{p.nome}</span>
+                        <span className="block truncate text-xs text-aco">{p.proximo_passo}</span></span>
+                      <span className="shrink-0 font-mono text-xs tabular text-aco">{dataBr(p.proximo_em)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Superficie>
+          )}
+          {d?.top_municipios?.length > 0 && (
+            <Superficie titulo="Cidades com mais dívida">
+              <ul className="divide-y divide-linha">
+                {d.top_municipios.slice(0, 8).map((m: any) => (
+                  <li key={m.municipio_ibge}>
+                    <button type="button" onClick={() => router.push(`/app/pesquisa${qs({ municipio: m.municipio_ibge })}`)}
+                      className="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm hover:bg-acento-fundo/40">
+                      <span>{m.municipio} <span className="text-aco">· {m.uf}</span></span>
+                      <span className="font-mono tabular text-aco">{brl(m.valor_total, true)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Superficie>
+          )}
+        </div>
+      </div>
+
+      {d?.pessoas_fisicas && Number(d.pessoas_fisicas.pessoas) > 0 && (
+        <p className="mt-4 text-xs text-aco">
+          Além das empresas, {num(d.pessoas_fisicas.pessoas)} pessoas físicas somam {brl(d.pessoas_fisicas.valor_total, true)} inscritos
+          {uf ? ` em ${uf}` : ""}. Elas aparecem nos <Link href="/app/cruzamentos" className="text-acento underline dark:text-acento-claro">cruzamentos</Link>, ligadas às empresas de que são sócias.
+        </p>
       )}
     </div>
   );

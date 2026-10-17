@@ -13,6 +13,10 @@
   --color-linha: #DFE4E8;
   --color-papel: #FFFFFF;
   --color-fundo: #F7F9FA;
+  /* Marca de grafico. O petroleo (#0F5B56) e escuro e cinzento demais para
+     barra: reprova no validador de paleta (luminosidade 0,43 e croma 0,07).
+     #0A938A e o mesmo matiz, aprovado em claro e escuro. */
+  --color-grafico: #0A938A;
 
   --radius-superficie: 10px;
 
@@ -79,7 +83,7 @@ body {
 .botao-liquido:hover { transform: translateY(-1px); }
 .botao-liquido:active { transform: translateY(0) scale(0.985); }
 
-.tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -87,3 +91,10 @@ body {
     transition-duration: 0.01ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* Editor de blocos (BlockNote) herdando o tema do painel. */
+.editor-notas .bn-editor { background: transparent; padding-inline: 0; font-family: var(--font-sans); }
+.editor-notas .bn-container { --bn-colors-editor-background: transparent; --bn-colors-editor-text: var(--color-tinta);
+  --bn-font-family: var(--font-sans); --bn-border-radius: 10px; }
+
+@keyframes entrar { from { transform: translateX(16px); opacity: 0.6; } to { transform: none; opacity: 1; } }
