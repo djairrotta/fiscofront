@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { brl, num, cnpjMascara, dataBr, telefoneFmt, ehCelular, COR_FASE } from "@/lib/formato";
 import { Kanban } from "@/componentes/app/Kanban";
 import { AvisoErro, Botao, Campo, Esqueleto, Gaveta, Rotulo, Selecao, Selo, Vazio } from "@/componentes/app/ui";
+import { PesquisaInternet } from "@/componentes/app/PesquisaInternet";
 
 interface Lead {
   id: string; cnpj: string | null; nome: string; fase: string; posicao: number; uf: string | null; municipio: string | null;
@@ -243,6 +244,9 @@ function GavetaLead({ id, fases, aoFechar }: { id: string | null; fases: any[]; 
                     <a className="truncate hover:underline" href={c.tipo === "tel" ? `tel:+55${c.valor}` : `mailto:${c.valor}`}>
                       {c.tipo === "tel" ? telefoneFmt(c.valor) : c.valor}</a>
                     {c.provavel_contador && <Selo tom="alerta">contador?</Selo>}
+                    {c.origem === "internet" && (c.url
+                      ? <a href={c.url} target="_blank" rel="noopener noreferrer" title="Página onde o contato aparece"><Selo>site</Selo></a>
+                      : <Selo>site</Selo>)}
                   </span>
                   <span className="flex items-center gap-1">
                     {c.tipo === "tel" && ehCelular(c.valor) && (
@@ -268,6 +272,8 @@ function GavetaLead({ id, fases, aoFechar }: { id: string | null; fases: any[]; 
               <Botao type="submit" tamanho="p">Adicionar</Botao>
             </form>
           </div>
+
+          {l.cnpj?.trim().length === 14 && <PesquisaInternet cnpj={l.cnpj.trim()} temLead />}
 
           <div>
             <Rotulo>Etiquetas</Rotulo>

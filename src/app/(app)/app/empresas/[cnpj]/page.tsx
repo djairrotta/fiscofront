@@ -14,6 +14,7 @@ import {
 import { api } from "@/lib/api";
 import { brl, num, cnpjMascara, dataBr, desde, telefoneFmt, ehCelular, posicao } from "@/lib/formato";
 import { AvisoErro, Botao, Esqueleto, Selo, Superficie, Vazio } from "@/componentes/app/ui";
+import { PesquisaInternet } from "@/componentes/app/PesquisaInternet";
 
 export default function Ficha({ params }: { params: Promise<{ cnpj: string }> }) {
   const { cnpj } = use(params);
@@ -228,6 +229,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
               {atualizar.error && <p className="text-xs text-red-700">{(atualizar.error as any).message}</p>}
             </div>
           </Superficie>
+
+          {(d.cnpj ?? cnpj).length === 14 && <PesquisaInternet cnpj={d.cnpj ?? cnpj} temLead={!!d.lead} />}
 
           {d.estadual_sp?.length > 0 && (
             <Superficie titulo="Dívida estadual em SP" acao={<span className="text-xs text-aco">transação PGE-SP</span>}>
