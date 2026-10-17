@@ -227,6 +227,30 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
             </div>
           </Superficie>
 
+          {d.estadual_sp?.length > 0 && (
+            <Superficie titulo="Dívida estadual em SP" acao={<span className="text-xs text-aco">transação PGE-SP</span>}>
+              <ul className="divide-y divide-linha">
+                {d.estadual_sp.map((t: any, i: number) => (
+                  <li key={i} className="px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{t.tipo_debito || t.edital}</span>
+                      <span className="font-mono tabular">{brl(t.valor_sem_beneficio ?? t.valor_com_beneficio)}</span>
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-aco">
+                      <Selo tom={/rompido/i.test(t.status) ? "perigo" : /pago/i.test(t.status) ? "ok" : "alerta"}>{t.status}</Selo>
+                      {t.qtd_debitos && <span>{t.qtd_debitos} débito(s)</span>}
+                      {t.data_solicitacao && <span>· adesão {dataBr(t.data_solicitacao)}</span>}
+                      <span>· {t.edital}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="border-t border-linha px-4 py-2 text-[11px] leading-relaxed text-aco">
+                Quem aderiu à transação da PGE-SP, base publicada pelo Estado (posição {dataBr(d.estadual_sp[0].posicao)}). SP não publica a lista completa de devedores; o resto só por consulta de CNPJ.
+              </p>
+            </Superficie>
+          )}
+
           <DividaEstadual cnpj={d.cnpj ?? cnpj} ufSugerida={end?.uf ?? dev?.uf} />
 
           {cad && (

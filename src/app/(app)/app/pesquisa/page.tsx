@@ -18,7 +18,7 @@ import { SeletorCidades } from "@/componentes/app/SeletorCidades";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 const CHAVES = ["q", "uf", "municipio", "valor_min", "valor_max", "tributo", "ajuizada", "contato", "cnae", "ativa", "desde", "ate", "ordem", "pagina",
-  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max"] as const;
+  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max", "estadual"] as const;
 const REGIMES = [["mei", "MEI"], ["simples", "Simples"], ["demais", "Fora do Simples"]] as const;
 const PORTES = [["1", "ME"], ["3", "EPP"], ["5", "Demais"]] as const;
 const ROTULO_REGIME: Record<string, string> = { mei: "MEI", simples: "Simples", demais: "fora do Simples" };
@@ -190,6 +190,14 @@ function Conteudo() {
             </Selecao>
           </div>
           <div>
+            <Rotulo>Dívida estadual (SP)</Rotulo>
+            <Selecao value={rascunho.estadual} onChange={(e) => r("estadual", e.target.value)}>
+              <option value="">Tanto faz</option>
+              <option value="sp">Com dívida estadual em SP</option>
+              <option value="sp_rompido">Acordo estadual rompido</option>
+            </Selecao>
+          </div>
+          <div>
             <Rotulo>Regime tributário</Rotulo>
             <Alternancia opcoes={REGIMES} valor={rascunho.regime} aoMudar={(v) => r("regime", v)} />
           </div>
@@ -300,6 +308,7 @@ function Conteudo() {
                         {e.porte && ROTULO_PORTE[e.porte] && <Selo>{ROTULO_PORTE[e.porte]}</Selo>}
                         {e.qtd_socios != null && <span>{e.qtd_socios} sócio{e.qtd_socios == 1 ? "" : "s"}</span>}
                         {e.tem_ajuizada && <Selo tom="alerta">ajuizada</Selo>}
+                        {e.estadual_sp && <Selo tom="perigo">estadual SP</Selo>}
                         {e.e_lead && <Selo tom="acento"><Check size={10} /> lead</Selo>}
                       </div>
                     </td>

@@ -181,6 +181,18 @@ export default function Painel() {
         </div>
       </div>
 
+      {d?.estadual_sp && Number(d.estadual_sp.empresas) > 0 && (
+        <button type="button" onClick={() => ir({ estadual: "sp" })}
+          className="mt-4 flex w-full cursor-pointer flex-wrap items-center justify-between gap-2 rounded-[10px] border border-linha bg-papel px-5 py-4 text-left hover:bg-acento-fundo/40">
+          <span>
+            <span className="block text-xs text-aco">Dívida estadual de SP (empresas que negociaram com a PGE-SP)</span>
+            <span className="font-mono text-lg font-semibold tabular">{brl(d.estadual_sp.valor_total, true)}</span>
+            <span className="ml-2 text-sm text-aco">{num(d.estadual_sp.empresas)} empresas · {num(d.estadual_sp.rompidos)} com acordo rompido</span>
+          </span>
+          <span className="text-xs text-acento dark:text-acento-claro">Ver na pesquisa →</span>
+        </button>
+      )}
+
       {d?.pessoas_fisicas && Number(d.pessoas_fisicas.pessoas) > 0 && (
         <p className="mt-4 text-xs text-aco">
           Além das empresas, {num(d.pessoas_fisicas.pessoas)} pessoas físicas somam {brl(d.pessoas_fisicas.valor_total, true)} inscritos
