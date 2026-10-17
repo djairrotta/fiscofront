@@ -18,7 +18,7 @@ import { AvisoErro, Botao, Campo, Esqueleto, Gaveta, Rotulo, Selecao, Selo, Vazi
 
 interface Lead {
   id: string; cnpj: string | null; nome: string; fase: string; posicao: number; uf: string | null; municipio: string | null;
-  divida_total: string | null; tributo_principal: string | null; telefones: any[]; emails: any[]; etiquetas: string[];
+  divida_total: string | null; tributo_principal: string | null; estadual_total?: string | null; telefones: any[]; emails: any[]; etiquetas: string[];
   proximo_passo: string | null; proximo_em: string | null; criado_em: string;
 }
 
@@ -43,6 +43,13 @@ function Conteudo() {
   const criar = useMutation({
     mutationFn: (cnpj: string) => api("/leads", { method: "POST", json: { cnpj } }),
     onSuccess: () => { setNovoCnpj(""); qc.invalidateQueries({ queryKey: ["leads"] }); },
+  });
+  const [avisoEst, setAvisoEst] = useState<string | null>(null);
+  const estadual = useMutation({
+    mutationFn: () => api("/divida-estadual/lote", { method: "POST", json: {
+      cnpjs: (leads.data ?? []).filter((l) => l.cnpj && (l.uf === "SP" || l.uf === "MG")).map((l) => l.cnpj).slice(0, 100) } }),
+    onSuccess: (r: any) => { setAvisoEst(`${r.com_debito} de ${r.consultas} consultas com dívida estadual (${brl(r.valor_total, true)}).`); qc.invalidateQueries({ queryKey: ["leads"] }); },
+    onError: (e: any) => setAvisoEst(e.message),
   });
   const criarFase = useMutation({
     mutationFn: (rotulo: string) => api("/funil", { method: "POST", json: { rotulo } }),
@@ -79,6 +86,9 @@ function Conteudo() {
               </button>
             ))}
           </div>
+          <Botao tamanho="p" disabled={estadual.isPending} onClick={() => estadual.mutate()} title="Consulta SP e MG pelo CNPJ dos leads desses estados">
+            {estadual.isPending ? "Consultando…" : "Dívida estadual"}
+          </Botao>
           <form className="flex gap-1.5" onSubmit={(e) => { e.preventDefault(); if (novoCnpj.trim()) criar.mutate(novoCnpj.trim()); }}>
             <Campo className="h-8 w-44 text-[13px]" placeholder="CNPJ para adicionar" value={novoCnpj} onChange={(e) => setNovoCnpj(e.target.value)} />
             <Botao type="submit" tamanho="p" variante="primario" disabled={criar.isPending}><Plus size={14} /> Lead</Botao>
@@ -86,6 +96,7 @@ function Conteudo() {
         </div>
       </header>
       {criar.error && <p className="mt-2 text-sm text-red-700">{(criar.error as any).message}</p>}
+      {avisoEst && <p className="mt-2 rounded-lg bg-acento-fundo px-3 py-2 text-sm" role="status">{avisoEst}</p>}
       <div className="mt-3"><AvisoErro erro={leads.error ?? funil.error} /></div>
 
       <div className="mt-4">
@@ -107,7 +118,10 @@ function Conteudo() {
                 <p className="line-clamp-2 font-medium leading-snug">{l.nome}</p>
                 <p className="mt-1 text-xs text-aco">{[l.municipio, l.uf].filter(Boolean).join(" · ")}{l.tributo_principal && ` · ${l.tributo_principal}`}</p>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="font-mono text-[13px] font-semibold tabular">{l.divida_total ? brl(Number(l.divida_total), true) : "—"}</span>
+                  <span className="font-mono text-[13px] font-semibold tabular">
+                    {l.divida_total ? brl(Number(l.divida_total), true) : "—"}
+                    {Number(l.estadual_total) > 0 && <span className="ml-1 text-[11px] font-normal text-aco" title="Dívida ativa estadual">+ {brl(Number(l.estadual_total), true)} est.</span>}
+                  </span>
                   <span className="flex items-center gap-1 text-aco">
                     {l.telefones?.length > 0 && <Phone size={13} aria-label="tem telefone" />}
                     {l.emails?.length > 0 && <EnvelopeSimple size={13} aria-label="tem e-mail" />}

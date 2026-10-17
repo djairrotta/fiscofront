@@ -74,6 +74,11 @@ function Conteudo() {
     },
     onError: (e: any) => setMsg(e.message),
   });
+  const estadual = useMutation({
+    mutationFn: () => api("/divida-estadual/lote", { method: "POST", json: { cnpjs: [...sel] } }),
+    onSuccess: (r: any) => setMsg(`Dívida estadual (SP e MG): ${r.com_debito} de ${r.consultas} consultas com débito, somando ${brl(r.valor_total, true)}.`),
+    onError: (e: any) => setMsg(e.message),
+  });
   const salvar = useMutation({
     mutationFn: (nome: string) => api("/buscas", { method: "POST", json: { nome, filtros: { ...filtros, pagina: "" } } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["buscas"] }),
@@ -248,6 +253,10 @@ function Conteudo() {
             {sel.size > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-sm">{sel.size} selecionadas</span>
+                <Botao tamanho="p" disabled={estadual.isPending || sel.size > 100} onClick={() => estadual.mutate()}
+                  title={sel.size > 100 ? "Até 100 por vez" : "Consulta a dívida ativa de SP e MG pelo CNPJ"}>
+                  {estadual.isPending ? "Consultando…" : "Dívida estadual"}
+                </Botao>
                 <Botao tamanho="p" variante="primario" disabled={lote.isPending} onClick={() => lote.mutate()}>
                   <Plus size={14} /> Adicionar aos leads
                 </Botao>
