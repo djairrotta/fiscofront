@@ -63,6 +63,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
             {(end?.municipio || dev?.uf) && <span>· {[end?.municipio ?? dev?.municipio, end?.uf ?? dev?.uf].filter(Boolean).join(" / ")}</span>}
             {cad?.situacao && <Selo tom={/ativa/i.test(cad.situacao) ? "ok" : "perigo"}>{cad.situacao}</Selo>}
             {dev?.tem_ajuizada && <Selo tom="alerta">execução fiscal</Selo>}
+            {dev?.regime && <Selo>{({ mei: "MEI", simples: "Simples Nacional", demais: "Fora do Simples" } as any)[dev.regime]}</Selo>}
+            {dev?.qtd_socios != null && <Selo>{dev.qtd_socios} sócio{dev.qtd_socios == 1 ? "" : "s"}</Selo>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -225,6 +227,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
             </div>
           </Superficie>
 
+          <DividaEstadual cnpj={d.cnpj ?? cnpj} ufSugerida={end?.uf ?? dev?.uf} />
+
           {cad && (
             <Superficie titulo="Cadastro">
               <dl className="divide-y divide-linha text-sm">
@@ -262,5 +266,46 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Divida ativa ESTADUAL (SP e MG), sob demanda: os estados nao publicam
+ * lista para download, so consulta por CNPJ. Cada consulta tem custo, por
+ * isso e por clique e fica em cache de 30 dias no servidor.
+ */
+function DividaEstadual({ cnpj, ufSugerida }: { cnpj: string; ufSugerida?: string | null }) {
+  const [uf, setUf] = useState<"SP" | "MG" | null>(null);
+  const q = useQuery({
+    queryKey: ["estadual", cnpj, uf],
+    queryFn: () => api(`/empresas/${cnpj}/divida-estadual/${uf}`),
+    enabled: !!uf, staleTime: Infinity, retry: false,
+  });
+  const r: any = q.data;
+  return (
+    <Superficie titulo="Dívida ativa estadual">
+      <div className="space-y-3 p-4 text-sm">
+        <div className="flex gap-2">
+          {(["SP", "MG"] as const).map((u) => (
+            <Botao key={u} tamanho="p" variante={uf === u ? "primario" : "secundario"} onClick={() => setUf(u)}>
+              Consultar {u}{ufSugerida === u ? " ·" : ""}
+            </Botao>
+          ))}
+        </div>
+        {q.isFetching && <Esqueleto className="h-10" />}
+        {q.error && <p className="text-red-700">{(q.error as any).message}</p>}
+        {r && !q.isFetching && (
+          r.indisponivel ? (
+            <p className="text-aco">{r.indisponivel === "Consulta estadual não configurada."
+              ? "A consulta estadual precisa do token da Infosimples configurado no servidor."
+              : r.indisponivel}</p>
+          ) : r.tem_debito ? (
+            <p><span className="font-mono font-semibold tabular">{brl(r.valor_total)}</span> em {num(r.quantidade)} inscrição(ões) na dívida ativa de {r.uf}
+              <span className="block text-xs text-aco">consultado em {dataBr(r.consultado_em)}{r.cache ? " (cache)" : ""}</span></p>
+          ) : <p>Nada inscrito na dívida ativa de {r.uf}. <span className="text-xs text-aco">{dataBr(r.consultado_em)}</span></p>
+        )}
+        {!uf && <p className="text-xs leading-relaxed text-aco">SP e MG não publicam a lista de devedores; a consulta é por CNPJ, feita quando você clica.</p>}
+      </div>
+    </Superficie>
   );
 }

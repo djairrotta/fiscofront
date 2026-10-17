@@ -14,9 +14,34 @@ import {
 import { api, qs } from "@/lib/api";
 import { brl, num, cnpjMascara, dataBr, posicao } from "@/lib/formato";
 import { AvisoErro, Botao, Campo, Esqueleto, Rotulo, Selecao, Selo, Vazio } from "@/componentes/app/ui";
+import { SeletorCidades } from "@/componentes/app/SeletorCidades";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
-const CHAVES = ["q", "uf", "municipio", "valor_min", "valor_max", "tributo", "ajuizada", "contato", "cnae", "ativa", "desde", "ate", "ordem", "pagina"] as const;
+const CHAVES = ["q", "uf", "municipio", "valor_min", "valor_max", "tributo", "ajuizada", "contato", "cnae", "ativa", "desde", "ate", "ordem", "pagina",
+  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max"] as const;
+const REGIMES = [["mei", "MEI"], ["simples", "Simples"], ["demais", "Fora do Simples"]] as const;
+const PORTES = [["1", "ME"], ["3", "EPP"], ["5", "Demais"]] as const;
+const ROTULO_REGIME: Record<string, string> = { mei: "MEI", simples: "Simples", demais: "fora do Simples" };
+const ROTULO_PORTE: Record<string, string> = { 1: "ME", 3: "EPP", 5: "demais" };
+
+/** Grupo de botoes liga/desliga que guarda a escolha como lista separada por virgula. */
+function Alternancia({ opcoes, valor, aoMudar }: { opcoes: readonly (readonly [string, string])[]; valor: string; aoMudar: (v: string) => void }) {
+  const sel = new Set(valor ? valor.split(",") : []);
+  return (
+    <div className="flex flex-wrap gap-1">
+      {opcoes.map(([v, r]) => {
+        const on = sel.has(v);
+        return (
+          <button key={v} type="button" aria-pressed={on}
+            onClick={() => { on ? sel.delete(v) : sel.add(v); aoMudar([...sel].join(",")); }}
+            className={`cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${on ? "border-acento bg-acento text-white" : "border-linha bg-papel text-aco hover:border-acento"}`}>
+            {r}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function Conteudo() {
   const router = useRouter();
@@ -115,7 +140,7 @@ function Conteudo() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[250px_1fr]">
         {/* Filtros */}
-        <aside className={`${filtrosAbertos ? "block" : "hidden"} space-y-4 lg:block`}>
+        <aside className={`${filtrosAbertos ? "block" : "hidden"} space-y-4 lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1`}>
           <div>
             <Rotulo>Estados</Rotulo>
             <div className="grid grid-cols-6 gap-1">
@@ -135,6 +160,11 @@ function Conteudo() {
               })}
             </div>
           </div>
+          <div>
+            <Rotulo>Cidades</Rotulo>
+            <SeletorCidades valor={rascunho.municipio} aoMudar={(v) => r("municipio", v)}
+              ufs={rascunho.uf ? rascunho.uf.split(",") : []} />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div><Rotulo>Dívida mínima</Rotulo><Campo inputMode="numeric" placeholder="R$" value={rascunho.valor_min} onChange={(e) => r("valor_min", e.target.value.replace(/\D/g, ""))} /></div>
             <div><Rotulo>Dívida máxima</Rotulo><Campo inputMode="numeric" placeholder="R$" value={rascunho.valor_max} onChange={(e) => r("valor_max", e.target.value.replace(/\D/g, ""))} /></div>
@@ -153,6 +183,22 @@ function Conteudo() {
               <option value="nao">Ainda não ajuizada</option>
               <option value="sim">Já ajuizada</option>
             </Selecao>
+          </div>
+          <div>
+            <Rotulo>Regime tributário</Rotulo>
+            <Alternancia opcoes={REGIMES} valor={rascunho.regime} aoMudar={(v) => r("regime", v)} />
+          </div>
+          <div>
+            <Rotulo>Porte</Rotulo>
+            <Alternancia opcoes={PORTES} valor={rascunho.porte} aoMudar={(v) => r("porte", v)} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Rotulo>Sócios, mín.</Rotulo><Campo inputMode="numeric" value={rascunho.socios_min} onChange={(e) => r("socios_min", e.target.value.replace(/\D/g, ""))} /></div>
+            <div><Rotulo>Sócios, máx.</Rotulo><Campo inputMode="numeric" value={rascunho.socios_max} onChange={(e) => r("socios_max", e.target.value.replace(/\D/g, ""))} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Rotulo>Capital mín.</Rotulo><Campo inputMode="numeric" placeholder="R$" value={rascunho.capital_min} onChange={(e) => r("capital_min", e.target.value.replace(/\D/g, ""))} /></div>
+            <div><Rotulo>Capital máx.</Rotulo><Campo inputMode="numeric" placeholder="R$" value={rascunho.capital_max} onChange={(e) => r("capital_max", e.target.value.replace(/\D/g, ""))} /></div>
           </div>
           <div>
             <Rotulo>Contato na base</Rotulo>
@@ -177,11 +223,12 @@ function Conteudo() {
               <option value="inscricoes">Mais inscrições</option>
               <option value="antigas">Dívida mais antiga</option>
               <option value="recentes">Inscrição mais recente</option>
+              <option value="capital">Maior capital social</option>
+              <option value="socios">Mais sócios</option>
               <option value="nome">Nome</option>
             </Selecao>
           </div>
-          {filtros.municipio && <Selo tom="acento">Município IBGE {filtros.municipio}</Selo>}
-          <div className="flex gap-2 pt-1">
+          <div className="sticky bottom-0 flex gap-2 bg-fundo pb-1 pt-2">
             <Botao variante="primario" className="flex-1" onClick={() => aplicar(rascunho)}>Aplicar</Botao>
             <Botao variante="fantasma" onClick={() => aplicar({} as any)}>Limpar</Botao>
           </div>
@@ -240,6 +287,9 @@ function Conteudo() {
                         <span className="font-mono tabular">{cnpjMascara(e.cnpj)}</span>
                         {e.telefone && <Phone size={12} aria-label="tem telefone" />}
                         {e.email && <EnvelopeSimple size={12} aria-label="tem e-mail" />}
+                        {e.regime && <Selo>{ROTULO_REGIME[e.regime]}</Selo>}
+                        {e.porte && ROTULO_PORTE[e.porte] && <Selo>{ROTULO_PORTE[e.porte]}</Selo>}
+                        {e.qtd_socios != null && <span>{e.qtd_socios} sócio{e.qtd_socios == 1 ? "" : "s"}</span>}
                         {e.tem_ajuizada && <Selo tom="alerta">ajuizada</Selo>}
                         {e.e_lead && <Selo tom="acento"><Check size={10} /> lead</Selo>}
                       </div>

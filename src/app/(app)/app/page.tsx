@@ -95,6 +95,25 @@ export default function Painel() {
         </Superficie>
       </div>
 
+      {(d?.por_regime?.length > 0 || d?.por_porte?.length > 0) && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+          <Superficie titulo="Por regime tributário" acao={<span className="text-xs text-aco">nº de empresas</span>}>
+            <div className="p-4">
+              <GraficoBarras horizontal altura={140} formatar={(v) => num(v)} x="rotulo" y="empresas"
+                dados={d.por_regime.map((r: any) => ({ ...r, rotulo: ({ mei: "MEI", simples: "Simples Nacional", demais: "Fora do Simples" } as any)[r.regime] }))}
+                aoClicar={(l) => ir({ regime: l.regime })} />
+            </div>
+          </Superficie>
+          <Superficie titulo="Por porte" acao={<span className="text-xs text-aco">nº de empresas</span>}>
+            <div className="p-4">
+              <GraficoBarras horizontal altura={140} formatar={(v) => num(v)} x="rotulo" y="empresas"
+                dados={d.por_porte.map((r: any) => ({ ...r, rotulo: ({ 1: "Microempresa", 3: "Pequeno porte", 5: "Demais" } as any)[r.porte] }))}
+                aoClicar={(l) => ir({ porte: l.porte })} />
+            </div>
+          </Superficie>
+        </div>
+      )}
+
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
         <Superficie titulo="Maiores devedoras"
           acao={<Link href={`/app/pesquisa${qs({ uf })}`} className="inline-flex items-center gap-1 text-xs text-acento hover:underline dark:text-acento-claro">Ver todas <ArrowRight size={12} /></Link>}>
