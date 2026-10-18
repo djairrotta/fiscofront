@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { brl, num, cnpjMascara, dataBr, desde, telefoneFmt, ehCelular, posicao } from "@/lib/formato";
 import { AvisoErro, Botao, Esqueleto, Selo, Superficie, Vazio } from "@/componentes/app/ui";
 import { PesquisaInternet } from "@/componentes/app/PesquisaInternet";
+import { HistoricoDivida } from "@/componentes/app/HistoricoDivida";
 
 export default function Ficha({ params }: { params: Promise<{ cnpj: string }> }) {
   const { cnpj } = use(params);
@@ -102,6 +103,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
       )}
 
       {d.programas?.length > 0 && <ComoRegularizar programas={d.programas} />}
+
+      <div className="mt-4"><HistoricoDivida cnpj={d.cnpj ?? cnpj} /></div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-4">

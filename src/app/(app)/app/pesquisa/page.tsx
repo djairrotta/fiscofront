@@ -18,7 +18,11 @@ import { SeletorCidades } from "@/componentes/app/SeletorCidades";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 const CHAVES = ["q", "uf", "municipio", "valor_min", "valor_max", "tributo", "ajuizada", "contato", "cnae", "ativa", "desde", "ate", "ordem", "pagina",
-  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max", "estadual", "programa", "acordo"] as const;
+  "regime", "porte", "socios_min", "socios_max", "capital_min", "capital_max", "estadual", "programa", "acordo", "sinal"] as const;
+/** Sinais da série histórica da PGFN (trimestre a trimestre). */
+const SINAIS = [["nova_tri", "Inscrição nova no trimestre"], ["nova_12m", "Inscrição nova em 12 meses"],
+  ["rescindiu", "Acordo caiu (12 meses)"], ["negociou", "Negociou no trimestre"], ["ajuizou", "Ajuizada no trimestre"],
+  ["cresceu", "Dívida cresceu 10%+"], ["caiu", "Dívida caiu 10%+"], ["quitou", "Quitou inscrições"], ["recorrente", "Devedora há 2+ anos"]] as const;
 const REGIMES = [["mei", "MEI"], ["simples", "Simples"], ["demais", "Fora do Simples"]] as const;
 const PORTES = [["1", "ME"], ["3", "EPP"], ["5", "Demais"]] as const;
 const ROTULO_REGIME: Record<string, string> = { mei: "MEI", simples: "Simples", demais: "fora do Simples" };
@@ -190,6 +194,10 @@ function Conteudo() {
             </Selecao>
           </div>
           <div>
+            <Rotulo>Momento da dívida</Rotulo>
+            <Alternancia opcoes={SINAIS} valor={rascunho.sinal} aoMudar={(v) => r("sinal", v)} />
+          </div>
+          <div>
             <Rotulo>Acordo com a PGFN</Rotulo>
             <Selecao value={rascunho.acordo} onChange={(e) => r("acordo", e.target.value)}>
               <option value="">Tanto faz</option>
@@ -256,6 +264,8 @@ function Conteudo() {
               <option value="inscricoes">Mais inscrições</option>
               <option value="antigas">Dívida mais antiga</option>
               <option value="recentes">Inscrição mais recente</option>
+              <option value="novas">Mais dívida nova (12 meses)</option>
+              <option value="crescimento">Maior crescimento da dívida</option>
               <option value="capital">Maior capital social</option>
               <option value="socios">Mais sócios</option>
               <option value="nome">Nome</option>
@@ -330,6 +340,10 @@ function Conteudo() {
                         {e.tem_ajuizada && <Selo tom="alerta">ajuizada</Selo>}
                         {e.estadual_sp && <Selo tom="perigo">estadual SP</Selo>}
                         {Number(e.qtd_rescindidas) > 0 && <Selo tom="perigo">parcelamento rescindido</Selo>}
+                        {Number(e.sinais?.novas_tri) > 0 && <Selo tom="perigo">{e.sinais.novas_tri} inscrição(ões) nova(s) no trimestre</Selo>}
+                        {Number(e.sinais?.rescindidas_12m) > 0 && !Number(e.qtd_rescindidas) && <Selo tom="perigo">acordo caiu</Selo>}
+                        {e.sinais?.variacao_12m_pct != null && Math.abs(Number(e.sinais.variacao_12m_pct)) >= 10 &&
+                          <Selo tom={Number(e.sinais.variacao_12m_pct) > 0 ? "alerta" : "ok"}>{Number(e.sinais.variacao_12m_pct) > 0 ? "+" : ""}{Number(e.sinais.variacao_12m_pct).toLocaleString("pt-BR")}% em 12 meses</Selo>}
                         {Number(e.qtd_negociadas) > 0 && Number(e.qtd_negociadas) === Number(e.qtd_inscricoes) && <Selo tom="ok">tudo negociado</Selo>}
                         {e.e_lead && <Selo tom="acento"><Check size={10} /> lead</Selo>}
                       </div>
