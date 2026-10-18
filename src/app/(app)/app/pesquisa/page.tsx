@@ -462,7 +462,7 @@ const GRUPOS_MARCA: { fonte: string; titulo: string; rot?: Record<string, string
   { fonte: "sisen", titulo: "Benefício fiscal habilitado (SISEN)", max: 12 },
   { fonte: "lei_do_bem", titulo: "Lei do Bem (P&D)", rot: { aprovada: "Teve incentivo aprovado" } },
   { fonte: "anp", titulo: "Setores regulados", rot: { posto_combustivel: "Posto de combustível (ANP)" } },
-  { fonte: "rntrc", titulo: "Transportador (RNTRC)", max: 4 },
+  { fonte: "rntrc", titulo: "Transportador (RNTRC)", rot: { etc: "Empresa de transporte (ETC)", ctc: "Cooperativa (CTC)", tac: "Autônomo (TAC)" } },
   { fonte: "ceis", titulo: "Sanção CEIS (CGU)", max: 0 },
   { fonte: "cnep", titulo: "Sanção CNEP (CGU)", max: 0 },
   { fonte: "lista_suja", titulo: "Cadastro de empregadores (MTE)", max: 0 },
@@ -480,7 +480,7 @@ function BasesExtras({ dados, valor, aoMudar }: { dados: any; valor: string; aoM
         const tipos = (dados.tipos as any[]).filter((t) => t.fonte === g.fonte);
         if (!tipos.length) return null;
         const opcoes: [string, string, number][] = g.max === 0
-          ? [[g.fonte, "Qualquer sanção", tipos.reduce((a, t) => a + Number(t.empresas), 0)]]
+          ? [[g.fonte, g.fonte === "lista_suja" ? "Está no cadastro" : "Qualquer sanção", tipos.reduce((a, t) => a + Number(t.empresas), 0)]]
           : tipos.slice(0, g.max ?? 20).map((t) => [`${g.fonte}:${t.tipo}`, g.rot?.[t.tipo] ?? titulo1(t.tipo), Number(t.empresas)]);
         return (
           <div key={g.fonte}>
