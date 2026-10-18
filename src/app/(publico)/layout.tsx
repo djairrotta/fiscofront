@@ -28,8 +28,8 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
             <div className="max-w-sm">
               <p className="text-[15px] font-semibold">fisco</p>
               <p className="mt-2 text-sm text-aco">
-                Prospecção tributária sobre dados públicos. Um serviço do hub judinfo
-                para advogados.
+                Pesquisa de empresas e dívida federal sobre dados públicos. Um serviço
+                do hub judinfo para contadores e gestores de empresas.
               </p>
             </div>
             <div className="text-sm">

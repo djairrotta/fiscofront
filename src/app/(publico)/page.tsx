@@ -11,14 +11,14 @@ import { DadosEstruturados, organizacao, aplicativo, perguntas } from "@/compone
 export const revalidate = 3600;
 
 const CAPITULOS = [
-  { titulo: "A base já é pública",
-    texto: "A PGFN publica a dívida inscrita a cada trimestre e a Receita publica o cadastro de CNPJ inteiro. O dado está aberto. O que não existe é o cruzamento." },
-  { titulo: "A tese escolhe o mercado",
-    texto: "Cada tese tem recorte próprio de CNAE, regime e tributo. Escolhida a tese, o mapa apaga o que não serve e sobra quem a sustenta." },
-  { titulo: "A região é a sua",
-    texto: "Da unidade federativa ao município. Você vê quantas empresas sustentam aquela tese na cidade onde já atende, com o valor inscrito ao lado." },
-  { titulo: "A peça sai do mesmo lugar",
-    texto: "Modelo revisado com jurisprudência. O preenchimento troca apenas o que é do caso concreto, e a revisão continua sendo sua." },
+  { titulo: "A base inteira, não só as devedoras",
+    texto: "A Receita publica o cadastro de todas as empresas do Brasil e a PGFN publica a dívida inscrita a cada trimestre. Juntamos as duas: cada empresa aparece com a dívida federal dela ao lado." },
+  { titulo: "O filtro é o seu mercado",
+    texto: "Atividade, cidade, raio em quilômetros, bairro, porte, capital, sócios, regime. Recém-abertas, excluídas do Simples, MEI desenquadrados. Você chega na lista que interessa antes de falar com alguém." },
+  { titulo: "O momento da dívida",
+    texto: "A série histórica da PGFN desde 2020 mostra quem teve inscrição nova no trimestre, quem teve o parcelamento rescindido e de quem a dívida está crescendo. É quando a empresa precisa de ajuda." },
+  { titulo: "Do contato à conversa",
+    texto: "E-mail, telefone e celular de cada empresa, com o contato do contador dela marcado. Campanha de e-mail e WhatsApp com descadastro automático, funil e lembretes no mesmo lugar." },
 ];
 
 const TESES = [
@@ -37,14 +37,18 @@ const TESES = [
 ];
 
 const DUVIDAS = [
+  { q: "Para quem é o fisco?",
+    a: "Para escritórios de contabilidade, consultorias e gestores de empresas. Quem procura clientes novos usa a pesquisa e as campanhas. Quem já tem carteira importa a lista de CNPJs e acompanha a dívida federal de cada cliente." },
   { q: "Isso substitui a minha análise?",
-    a: "Não. O sistema mostra quem tem o perfil da tese e qual é o valor inscrito. Dizer se a tese cabe naquele caso, com aquele contrato e aquela escrituração, continua sendo trabalho de advogado. A peça sai como minuta para a sua revisão." },
+    a: "Não. O sistema mostra o que está nos dados públicos: cadastro, regime, dívida inscrita e como ela mudou. Dizer o que fazer com aquela empresa, com a escrituração e os documentos dela, continua sendo trabalho seu." },
   { q: "De onde vem o valor da dívida?",
     a: "Da base de Dados Abertos da própria PGFN, nas três frentes que ela publica: dívida geral, previdenciária e FGTS. Somamos apenas o devedor principal, porque o corresponsável aparece repetido e dobraria o valor. Toda cifra na tela vem com a data de referência da base." },
   { q: "Por que o município não vem da PGFN?",
     a: "Porque a PGFN não publica município, só a unidade federativa e a unidade de inscrição. A cidade vem do cadastro de CNPJ da Receita Federal, cruzado pela raiz do CNPJ. É por isso que conseguimos descer ao município sem inventar dado." },
-  { q: "Posso consultar uma empresa que já é minha cliente?",
-    a: "Pode. A consulta por CNPJ devolve a dívida inscrita, as teses cujo perfil ela atende e os processos em que ela figura, descobertos por CNPJ e enriquecidos com a linha do tempo do DataJud." },
+  { q: "Posso usar esses dados para prospectar? E a LGPD?",
+    a: "Os dados são públicos e de pessoa jurídica: cadastro da Receita e dívida ativa da PGFN. O contato comercial entre empresas se apoia no legítimo interesse, desde que o destinatário possa sair. Por isso todo e-mail leva o link de descadastro, todo WhatsApp leva a opção de responder SAIR, e quem saiu nunca mais recebe do seu escritório. As campanhas têm limite diário e horário de envio." },
+  { q: "O telefone que aparece não é do contador da empresa?",
+    a: "Às vezes é. Quando o mesmo e-mail ou telefone aparece em cinco empresas ou mais, ou o e-mail tem cara de escritório contábil, marcamos como provável contato do contador. Na pesquisa, na exportação e nas campanhas dá para deixar esses contatos de fora." },
   { q: "E se eu quiser cancelar?",
     a: "A assinatura é mensal e o cancelamento é feito por você, sem contato comercial. O acesso vale até o fim do período já pago." },
 ];
@@ -64,13 +68,14 @@ export default async function Home() {
       <CenaScroll capitulos={CAPITULOS}>
         <div className="pointer-events-auto max-w-2xl pt-20 md:pt-24">
           <h1 className="text-4xl font-semibold tracking-tighter leading-[1.05] md:text-6xl">
-            A dívida ativa é pública.
+            Todas as empresas do Brasil.
             <br className="hidden md:inline" />{" "}
-            A oportunidade, não.
+            Com a dívida federal de cada uma.
           </h1>
           <p className="mt-5 max-w-[46ch] text-base leading-relaxed text-aco md:text-lg">
-            Cruzamos a base da PGFN com o cadastro de CNPJ da Receita e mostramos,
-            por cidade, quais empresas sustentam cada tese.
+            Pesquisa no cadastro completo da Receita, com a dívida ativa da PGFN e o
+            momento dela. Para contadores e gestores acharem a empresa certa e falarem
+            com ela.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Botao href="/empresas-devedoras">Ver a minha cidade</Botao>
@@ -84,26 +89,26 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
           <Entrada>
             <h2 className="max-w-[20ch] text-3xl font-semibold tracking-tighter md:text-4xl">
-              O gargalo não é a tese. É saber para quem levar.
+              O difícil não é o serviço. É saber quem precisa dele agora.
             </h2>
           </Entrada>
           <div className="mt-12 grid gap-px overflow-hidden rounded-superficie border border-linha bg-linha md:grid-cols-2">
             <Entrada className="bg-fundo p-8 md:p-10">
               <p className="text-sm font-medium text-aco">Como costuma ser</p>
               <ul className="mt-5 space-y-4 text-[15px] leading-relaxed text-aco">
-                <li>Você conhece a tese e não sabe quem na sua região tem o perfil dela.</li>
-                <li>A prospecção vira lista fria de CNPJ comprada sem critério tributário.</li>
-                <li>O valor em discussão só aparece depois que o cliente entrega os documentos.</li>
-                <li>A minuta começa do zero a cada caso.</li>
+                <li>A lista de empresas vem comprada, velha e sem critério fiscal.</li>
+                <li>Metade dos telefones é do contador que abriu a empresa.</li>
+                <li>Você só sabe da dívida quando o cliente já está com o problema.</li>
+                <li>Pesquisa numa ferramenta, e-mail em outra, follow-up na planilha.</li>
               </ul>
             </Entrada>
             <Entrada atraso={0.08} className="bg-papel p-8 md:p-10">
               <p className="text-sm font-medium text-acento">Como fica aqui</p>
               <ul className="mt-5 space-y-4 text-[15px] leading-relaxed">
-                <li>Você escolhe a tese e o mapa mostra onde ela tem lastro.</li>
-                <li>Filtra por município, regime, porte e tributo antes de falar com alguém.</li>
-                <li>O valor inscrito aparece junto do nome, com a data da base.</li>
-                <li>A minuta já nasce no modelo, com os campos do caso trocados.</li>
+                <li>A base é a da Receita, atualizada todo mês, com todas as empresas.</li>
+                <li>O contato do contador vem marcado e pode ficar de fora.</li>
+                <li>Inscrição nova, acordo rescindido e dívida crescendo aparecem como sinal.</li>
+                <li>Pesquisa, gráficos, exportação, campanha e funil no mesmo lugar.</li>
               </ul>
             </Entrada>
           </div>
@@ -149,18 +154,19 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
           <Entrada>
             <h2 className="max-w-[24ch] text-3xl font-semibold tracking-tighter md:text-4xl">
-              Depois de achar a empresa, o trabalho continua aqui dentro
+              Da pesquisa ao primeiro contato, sem trocar de ferramenta
             </h2>
           </Entrada>
           <div className="mt-12 grid gap-4 md:grid-cols-3 md:grid-rows-2">
             <Entrada className="md:col-span-2 md:row-span-2">
               <article className="flex h-full flex-col justify-between overflow-hidden rounded-superficie border border-linha bg-fundo">
                 <div className="p-8 md:p-10">
-                  <h3 className="text-xl font-semibold tracking-tight">Diagnóstico por CNPJ</h3>
+                  <h3 className="text-xl font-semibold tracking-tight">Pesquisa e gráficos</h3>
                   <p className="mt-3 max-w-[48ch] text-[15px] leading-relaxed text-aco">
-                    Dívida inscrita por tributo e origem, regime e porte vindos da Receita,
-                    teses cujo perfil a empresa atende e os processos em que ela figura,
-                    com a linha do tempo do DataJud movimento a movimento.
+                    Filtre por atividade, cidade, raio, bairro, regime, porte, capital,
+                    sócios e dívida, ou descreva em português o que procura e a IA monta
+                    os filtros. Cada pesquisa vira gráficos (onde estão, o que fazem,
+                    quando abriram) e sai em planilha de até 100 mil empresas.
                   </p>
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -170,19 +176,19 @@ export default async function Home() {
             </Entrada>
             <Entrada atraso={0.06}>
               <article className="h-full rounded-superficie bg-acento p-8 text-white">
-                <h3 className="text-lg font-semibold tracking-tight">Peça no modelo</h3>
+                <h3 className="text-lg font-semibold tracking-tight">Campanhas</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-white/80">
-                  Inicial a partir de modelo revisado. De cinco a trinta por mês,
-                  conforme o plano.
+                  E-mail e WhatsApp para as empresas da pesquisa, com limite diário,
+                  horário de envio e descadastro automático.
                 </p>
               </article>
             </Entrada>
             <Entrada atraso={0.12}>
               <article className="h-full rounded-superficie border border-linha bg-acento-fundo p-8">
-                <h3 className="text-lg font-semibold tracking-tight">Carteira e follow-up</h3>
+                <h3 className="text-lg font-semibold tracking-tight">Funil e lembretes</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-aco">
-                  Funil próprio, anotação, tarefa e linha do tempo por empresa.
-                  O contato fica registrado onde o caso nasceu.
+                  Fases do seu jeito, próximo passo por empresa e um e-mail às 7h
+                  com o que é para hoje e o que atrasou.
                 </p>
               </article>
             </Entrada>
@@ -195,11 +201,12 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
           <Entrada>
             <h2 className="max-w-[24ch] text-3xl font-semibold tracking-tighter md:text-4xl">
-              Toda tese entra com a maturidade declarada
+              Recuperação de crédito: toda tese entra com a maturidade declarada
             </h2>
             <p className="mt-4 max-w-[62ch] text-[15px] leading-relaxed text-aco">
-              Inclusive as derrotadas. Elas ficam na base marcadas como derrotadas,
-              e o mapa não as pontua. Vender lead de tese vencida queima o assinante.
+              Para quem oferece revisão tributária aos clientes. Inclusive as derrotadas:
+              elas ficam na base marcadas como derrotadas e não entram na conta.
+              Oferecer tese vencida queima a relação com o cliente.
             </p>
           </Entrada>
           <ul className="mt-12 divide-y divide-linha border-y border-linha">
@@ -231,8 +238,8 @@ export default async function Home() {
               </h2>
               <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-aco">
                 Uma consulta por visitante, sem cadastro. Devolve a dívida inscrita e
-                quais teses aquele perfil sustenta. Se o resultado não disser nada que
-                você já não saiba, não assine.
+                como ela está. Teste com um cliente seu: se o resultado não disser nada
+                que você já não saiba, não assine.
               </p>
             </Entrada>
             <Entrada atraso={0.06}>
@@ -262,31 +269,32 @@ export default async function Home() {
           <div className="mt-12 grid gap-4 md:grid-cols-2">
             <Entrada>
               <article className="flex h-full flex-col rounded-superficie border border-linha bg-papel p-8 md:p-10">
-                <h3 className="text-lg font-semibold tracking-tight">Documentação</h3>
+                <h3 className="text-lg font-semibold tracking-tight">Pesquisa</h3>
                 <p className="mt-4 font-mono text-4xl tracking-tight tabular">
                   R$ 49<span className="text-base text-aco"> por mês</span>
                 </p>
                 <ul className="mt-6 flex-1 space-y-3 text-[15px] leading-relaxed text-aco">
-                  <li>Mapa de dívida por estado e município</li>
-                  <li>Diagnóstico por CNPJ sem limite de consulta</li>
-                  <li>Base de teses com maturidade e checklist de documentos</li>
-                  <li>Modelos de inicial para baixar e preencher à mão</li>
-                  <li>Carteira e follow-up</li>
+                  <li>Pesquisa em todas as empresas do Brasil, com a dívida federal de cada uma</li>
+                  <li>Momento da dívida: inscrição nova, acordo rescindido, dívida crescendo</li>
+                  <li>Gráficos por pesquisa e exportação em planilha</li>
+                  <li>Listas importadas para acompanhar a sua carteira</li>
+                  <li>Funil, próximos passos e lembrete diário por e-mail</li>
                 </ul>
                 <div className="mt-8"><Botao href="/app">Assinar</Botao></div>
               </article>
             </Entrada>
             <Entrada atraso={0.08}>
               <article className="flex h-full flex-col rounded-superficie border border-acento bg-acento-fundo p-8 md:p-10">
-                <h3 className="text-lg font-semibold tracking-tight">Com preenchimento assistido</h3>
+                <h3 className="text-lg font-semibold tracking-tight">Com campanhas e IA</h3>
                 <p className="mt-4 text-[15px] leading-relaxed text-aco">
-                  O preço sai quando o primeiro modelo estiver validado com jurisprudência.
+                  O preço sai quando o envio estiver validado com os primeiros escritórios.
                   Enquanto não estiver, não cobramos por ele.
                 </p>
                 <ul className="mt-6 flex-1 space-y-3 text-[15px] leading-relaxed text-aco">
-                  <li>Tudo do plano Documentação</li>
-                  <li>Preenchimento da inicial pelo modelo, de cinco a trinta por mês</li>
-                  <li>Revisão obrigatória pelo advogado antes de protocolar</li>
+                  <li>Tudo do plano Pesquisa</li>
+                  <li>Campanhas de e-mail e WhatsApp com descadastro automático</li>
+                  <li>Pesquisa na internet: site, telefone e e-mail que a empresa publica</li>
+                  <li>IA: pesquisa em português, objetivos e mensagem de primeiro contato</li>
                 </ul>
                 <div className="mt-8"><Botao href="/app" variante="fantasma">Entrar na lista</Botao></div>
               </article>
@@ -324,7 +332,7 @@ export default async function Home() {
               Comece pela cidade onde você já atende
             </h2>
             <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-white/75">
-              O mapa é público. Você só precisa de conta para descer ao nome da empresa.
+              O mapa é público. Com a conta, você desce ao nome, ao contato e ao momento de cada empresa.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/app"

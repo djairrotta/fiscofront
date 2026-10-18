@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChartBar, MagnifyingGlass, CurrencyCircleDollar, Kanban, GitFork, Columns, NotePencil, MapTrifold, Scales, FileText, Handshake,
+  ChartBar, MagnifyingGlass, CurrencyCircleDollar, PaperPlaneTilt, GearSix, Kanban, GitFork, Columns, NotePencil, MapTrifold, Scales, FileText, Handshake,
 } from "@phosphor-icons/react";
 import { Sair } from "@/componentes/Sair";
 
@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/app/pesquisa", rotulo: "Pesquisa", Icone: MagnifyingGlass },
   { href: "/app/devedores", rotulo: "Devedores", Icone: CurrencyCircleDollar },
   { href: "/app/leads", rotulo: "Leads", Icone: Kanban },
+  { href: "/app/campanhas", rotulo: "Campanhas", Icone: PaperPlaneTilt },
   { href: "/app/cruzamentos", rotulo: "Cruzamentos", Icone: GitFork },
   { href: "/app/acordos", rotulo: "Acordos", Icone: Handshake },
   { href: "/app/quadros", rotulo: "Quadros", Icone: Columns },
@@ -18,6 +19,7 @@ export const NAV = [
   { href: "/app/mapa", rotulo: "Mapa", Icone: MapTrifold },
   { href: "/app/teses", rotulo: "Teses", Icone: Scales },
   { href: "/app/pecas", rotulo: "Peças", Icone: FileText },
+  { href: "/app/ajustes", rotulo: "Ajustes", Icone: GearSix },
 ];
 
 const ativo = (atual: string, href: string) => href === "/app" ? atual === "/app" : atual.startsWith(href);
@@ -25,7 +27,7 @@ const ativo = (atual: string, href: string) => href === "/app" ? atual === "/app
 export function NavLateral() {
   const atual = usePathname() || "";
   return (
-    <aside className="hidden w-52 shrink-0 border-r border-linha bg-papel md:block">
+    <aside className="hidden w-52 shrink-0 border-r border-linha bg-papel md:block print:!hidden">
       <div className="sticky top-0 flex h-[100dvh] flex-col p-3">
         <Link href="/" className="block px-2.5 py-2 text-[15px] font-semibold tracking-tight">fisco</Link>
         <nav className="mt-3 flex-1 space-y-0.5">
@@ -52,7 +54,7 @@ const CELULAR = ["/app", "/app/pesquisa", "/app/leads", "/app/quadros", "/app/no
 export function NavInferior() {
   const atual = usePathname() || "";
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-linha bg-papel md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-linha bg-papel md:hidden print:hidden">
       {NAV.filter((n) => CELULAR.includes(n.href)).map(({ href, rotulo, Icone }) => {
         const a = ativo(atual, href);
         return (

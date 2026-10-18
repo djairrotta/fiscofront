@@ -9,6 +9,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ChartBar,
   CalendarBlank, EnvelopeSimple, ListBullets, Kanban as IconeKanban, MagnifyingGlass, Phone, Plus, Trash, WhatsappLogo, ArrowSquareOut, ArrowClockwise,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
@@ -79,6 +80,7 @@ function Conteudo() {
             <MagnifyingGlass size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-aco" />
             <Campo className="h-8 w-48 pl-8 text-[13px]" placeholder="Filtrar" value={filtro} onChange={(e) => setFiltro(e.target.value)} />
           </div>
+          <Link href="/app/leads/painel" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><ChartBar size={14} /> Painel do funil</Link>
           <div className="flex rounded-full border border-linha bg-papel p-0.5">
             {([["kanban", IconeKanban, "Kanban"], ["lista", ListBullets, "Lista"]] as const).map(([m, I, r]) => (
               <button key={m} type="button" onClick={() => setModo(m)} aria-pressed={modo === m}

@@ -73,7 +73,7 @@ export function GraficoBarras({
                 axisLine={horizontal ? false : { stroke: "var(--color-linha)" }}
                 interval={horizontal ? undefined : "preserveStartEnd"} minTickGap={8} />
               <YAxis type={horizontal ? "category" : "number"} dataKey={horizontal ? x : undefined}
-                tickFormatter={horizontal ? undefined : (v) => formatar(v)}
+                tickFormatter={horizontal ? (v) => (String(v).length > 24 ? String(v).slice(0, 23) + "…" : String(v)) : (v) => formatar(v)}
                 width={horizontal ? 150 : 64} interval={horizontal ? 0 : undefined}
                 tick={{ fontSize: 11, fill: "var(--color-aco)" }} axisLine={false} tickLine={false} />
               <Tooltip cursor={{ fill: "var(--color-acento-fundo)", opacity: 0.5 }}
@@ -120,14 +120,14 @@ const GRADE: Record<string, [number, number]> = {
   SC: [2, 6], RS: [2, 7],
 };
 
-export function MapaUfs({ dados, selecionada, aoEscolher }:
+export function MapaUfs({ dados, selecionada, aoEscolher, formatar = (v: number) => brl(v, true), rotulo = "Dívida por estado" }:
   { dados: { uf: string; valor_total: number | string; empresas: number | string }[];
-    selecionada: string | null; aoEscolher: (uf: string | null) => void }) {
+    selecionada: string | null; aoEscolher: (uf: string | null) => void; formatar?: (v: number) => string; rotulo?: string }) {
   const max = Math.max(1, ...dados.map((d) => Number(d.valor_total) || 0));
   const por = new Map(dados.map((d) => [d.uf, d]));
   const L = 40, G = 4;
   return (
-    <svg viewBox={`0 0 ${7 * (L + G)} ${8 * (L + G)}`} className="mx-auto w-full max-w-[300px]" role="group" aria-label="Dívida por estado">
+    <svg viewBox={`0 0 ${7 * (L + G)} ${8 * (L + G)}`} className="mx-auto w-full max-w-[300px]" role="group" aria-label={rotulo}>
       {Object.entries(GRADE).map(([uf, [c, l]]) => {
         const d = por.get(uf);
         const v = Number(d?.valor_total) || 0;
@@ -138,9 +138,9 @@ export function MapaUfs({ dados, selecionada, aoEscolher }:
           <g key={uf} transform={`translate(${c * (L + G)},${l * (L + G)})`}
              className="cursor-pointer" onClick={() => aoEscolher(sel ? null : uf)}
              role="button" tabIndex={0} aria-pressed={sel}
-             aria-label={`${uf}: ${brl(v, true)}`}
+             aria-label={`${uf}: ${formatar(v)}`}
              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && aoEscolher(sel ? null : uf)}>
-            <title>{`${uf} · ${brl(v, true)} · ${num(Number(d?.empresas) || 0)} empresas`}</title>
+            <title>{`${uf} · ${formatar(v)} · ${num(Number(d?.empresas) || 0)} empresas`}</title>
             <rect width={L} height={L} rx={6}
               fill={`color-mix(in oklab, var(--color-grafico) ${Math.round(12 + t * 88)}%, var(--color-papel))`}
               stroke={sel ? "var(--color-tinta)" : "var(--color-papel)"} strokeWidth={sel ? 2 : 2}

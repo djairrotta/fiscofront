@@ -10,8 +10,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  BookmarkSimple, CaretDown, CaretLeft, CaretRight, ChartBar, Check, Copy, DownloadSimple, EnvelopeSimple, Funnel,
-  Lightning, MagnifyingGlass, MapPin, Phone, Plus, Trash, Users, WhatsappLogo, X,
+  BookmarkSimple, CaretDown, ClockCounterClockwise, CaretLeft, CaretRight, ChartBar, Check, Copy, DownloadSimple, EnvelopeSimple, Funnel,
+  Lightning, ListBullets, MagnifyingGlass, PaperPlaneTilt, Sparkle, Target, MapPin, Phone, Plus, Trash, Users, WhatsappLogo, X,
 } from "@phosphor-icons/react";
 import { api, qs } from "@/lib/api";
 import { brl, cnpjMascara, dataBr, desde, ehCelular, num, telefoneFmt } from "@/lib/formato";
@@ -21,7 +21,7 @@ import { SeletorCnae } from "@/componentes/app/SeletorCnae";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 const CHAVES_BUSCA = [
-  "q", "email", "telefone", "secao", "cnae", "cnae_secundario", "uf", "municipio", "bairro", "cep", "logradouro", "numero",
+  "q", "lista", "email", "telefone", "secao", "cnae", "cnae_secundario", "uf", "municipio", "bairro", "cep", "logradouro", "numero",
   "raio_km", "raio_municipio", "hab_min", "hab_max", "situacao", "situacao_de", "situacao_ate", "matriz", "filiais_min",
   "natureza", "abertura_de", "abertura_ate", "idade_min", "idade_max", "porte", "mei", "simples", "regime", "faturamento",
   "capital_min", "capital_max", "socios_min", "socios_max", "contato", "ocultar_contador", "recuperacao",
@@ -122,7 +122,15 @@ function Conteudo() {
     queryFn: () => api<any>(`/busca/contagem${qs(previaFiltros)}`), placeholderData: keepPreviousData, staleTime: 60_000,
   });
   const buscas = useQuery({ queryKey: ["buscas"], queryFn: () => api<any[]>("/buscas") });
+  const listas = useQuery({ queryKey: ["listas"], queryFn: () => api<any[]>("/listas"), staleTime: 60_000 });
   const tributos = useQuery({ queryKey: ["tributos"], queryFn: () => api<any[]>("/devedores/tributos"), staleTime: 3600_000 });
+
+  const [textoIa, setTextoIa] = useState("");
+  const [explIa, setExplIa] = useState<{ texto: string; avisos: string[] } | null>(null);
+  const ia = useMutation({
+    mutationFn: () => api<any>("/ia/busca", { method: "POST", json: { texto: textoIa } }),
+    onSuccess: (x) => { setExplIa({ texto: x.explicacao, avisos: x.avisos ?? [] }); aplicar(x.filtros); },
+  });
 
   const lote = useMutation({
     mutationFn: () => api("/leads/lote", { method: "POST", json: { cnpjs: [...sel] } }),
@@ -163,7 +171,10 @@ function Conteudo() {
               <Botao type="submit" tamanho="p" variante="primario">Salvar</Botao>
             </form>
           ))}
+          <Link href="/app/pesquisa/listas" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><ListBullets size={14} /> Importar lista</Link>
+          <Link href="/app/pesquisa/historico" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><ClockCounterClockwise size={14} /> Histórico</Link>
           {temFiltro && <Link href={`/app/pesquisa/graficos${qs(filtros)}`} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><ChartBar size={14} /> Gráficos</Link>}
+          {temFiltro && <Link href={`/app/campanhas/nova${qs({ ...filtros, pagina: "" })}`} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><PaperPlaneTilt size={14} /> Enviar campanha</Link>}
           {temFiltro && <Link href={`/app/pesquisa/exportar${qs(filtros)}`} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo"><DownloadSimple size={14} /> Exportar</Link>}
         </div>
       </header>
@@ -181,6 +192,26 @@ function Conteudo() {
         </div>
         <Botao type="submit" variante="primario" className="h-10">Buscar</Botao>
       </form>
+
+      {/* Busca em linguagem natural */}
+      <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (textoIa.trim().length >= 4) ia.mutate(); }}>
+        <div className="relative flex-1">
+          <Sparkle size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-acento" />
+          <Campo className="h-9 pl-9 text-[13px]" value={textoIa} onChange={(e) => setTextoIa(e.target.value)}
+            placeholder="Ou descreva: “restaurantes em Campinas abertos este ano com celular, sem o contato do contador”" aria-label="Pesquisar com IA" />
+        </div>
+        <Botao type="submit" className="h-9" disabled={ia.isPending}>{ia.isPending ? "Pensando…" : "Pesquisar com IA"}</Botao>
+        <Link href="/app/pesquisa/objetivos" className="hidden h-9 items-center gap-1.5 rounded-full border border-linha bg-papel px-3 text-[13px] font-medium hover:bg-acento-fundo sm:inline-flex"><Target size={14} /> Objetivos</Link>
+      </form>
+      <AvisoErro erro={ia.error} />
+      {explIa && (
+        <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-acento-fundo px-3 py-2 text-[13px]">
+          <Sparkle size={14} className="mt-0.5 shrink-0 text-acento" />
+          <span>{explIa.texto}{explIa.avisos.length > 0 && <span className="block text-xs text-aco">{explIa.avisos.join(" ")}</span>}
+            <span className="block text-xs text-aco">Confira os filtros ao lado: dá para ajustar qualquer um.</span></span>
+          <button type="button" aria-label="Fechar" className="ml-auto cursor-pointer text-aco" onClick={() => setExplIa(null)}><X size={13} /></button>
+        </p>
+      )}
 
       {/* Pesquisas prontas */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -205,7 +236,14 @@ function Conteudo() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[300px_1fr]">
         <aside className={`${filtrosAbertos ? "block" : "hidden"} space-y-2 lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1`}>
-          <Secao titulo="1. Segmento" n={ativos(rascunho, ["secao", "cnae", "natureza"])} aberta>
+          <Secao titulo="1. Segmento" n={ativos(rascunho, ["secao", "cnae", "natureza", "lista"])} aberta>
+            {(listas.data?.length ?? 0) > 0 && (
+              <div><Rotulo>Só empresas da lista</Rotulo>
+                <Selecao value={rascunho.lista} onChange={(e) => r("lista", e.target.value)}>
+                  <option value="">Todas as empresas</option>
+                  {listas.data!.map((l: any) => <option key={l.id} value={l.id}>{l.nome} ({num(l.total)})</option>)}
+                </Selecao></div>
+            )}
             <div><Rotulo>Atividade (CNAE)</Rotulo><SeletorCnae valor={rascunho.cnae} aoMudar={(v) => r("cnae", v)} />
               <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-aco">
                 <input type="checkbox" checked={rascunho.cnae_secundario === "1"} onChange={(e) => r("cnae_secundario", e.target.checked ? "1" : "")} /> incluir atividade secundária
@@ -393,7 +431,7 @@ function Conteudo() {
       </div>
 
       {/* Barra fixa: prévia + buscar */}
-      <div className="fixed inset-x-0 bottom-14 z-20 border-t border-linha bg-papel/95 px-5 py-2.5 backdrop-blur md:bottom-0 lg:left-[232px]">
+      <div className="fixed inset-x-0 bottom-14 z-20 border-t border-linha bg-papel/95 px-5 py-2.5 backdrop-blur md:bottom-0 md:left-52 print:hidden">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
           <p className="text-sm">
             <span className="text-xs uppercase tracking-wide text-aco">Prévia </span>
@@ -412,7 +450,7 @@ function Conteudo() {
 
 function Cartao({ e, marcado, aoMarcar }: { e: any; marcado: boolean; aoMarcar: () => void }) {
   const div = e.divida;
-  const regime = e.opcao_mei ? "MEI" : e.opcao_simples ? "Simples" : "Fora do Simples";
+  const regime = e.opcao_mei ? "MEI" : e.opcao_simples ? "Simples" : e.opcao_simples === false ? "Fora do Simples" : null;
   return (
     <li className="rounded-[10px] border border-linha bg-papel">
       <div className="flex gap-3 p-4">
@@ -435,7 +473,7 @@ function Cartao({ e, marcado, aoMarcar }: { e: any; marcado: boolean; aoMarcar: 
             <span className="inline-flex items-center gap-1 rounded-full bg-fundo px-2 py-0.5"><MapPin size={11} />{e.municipio}/{e.uf}</span>
             {e.data_abertura && <span className="rounded-full bg-fundo px-2 py-0.5">aberta {dataBr(e.data_abertura)} ({desde(e.data_abertura)})</span>}
             {e.porte && <span className="rounded-full bg-fundo px-2 py-0.5">{ROT_PORTE[e.porte]}</span>}
-            <span className="rounded-full bg-fundo px-2 py-0.5">{regime}</span>
+            {regime && <span className="rounded-full bg-fundo px-2 py-0.5">{regime}</span>}
             {e.natureza && <span className="rounded-full bg-fundo px-2 py-0.5">{e.natureza}</span>}
             {Number(e.capital_social) > 0 && <span className="rounded-full bg-fundo px-2 py-0.5">capital {brl(e.capital_social, true)}</span>}
             {e.grupo?.estab > 1 && <span className="rounded-full bg-fundo px-2 py-0.5">{e.grupo.estab} estabelecimentos</span>}

@@ -30,7 +30,7 @@ export const aplicativo = (preco: string) => ({
   operatingSystem: "Web",
   url: BASE,
   description:
-    "Prospecção tributária sobre a dívida ativa da PGFN cruzada com o cadastro de CNPJ da Receita Federal, por município e por tese.",
+    "Pesquisa de todas as empresas do Brasil no cadastro de CNPJ da Receita Federal, com a dívida ativa da PGFN de cada uma, para contadores e gestores de empresas.",
   offers: { "@type": "Offer", price: preco, priceCurrency: "BRL",
             category: "subscription", url: `${BASE}/#planos` },
   isAccessibleForFree: false,

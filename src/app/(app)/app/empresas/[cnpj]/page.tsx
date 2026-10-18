@@ -10,11 +10,14 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowClockwise, ArrowLeft, Copy, EnvelopeSimple, NotePencil, Phone, Plus, WhatsappLogo, Warning, Kanban,
+  Printer,
 } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { brl, num, cnpjMascara, dataBr, desde, telefoneFmt, ehCelular, posicao } from "@/lib/formato";
 import { AvisoErro, Botao, Esqueleto, Selo, Superficie, Vazio } from "@/componentes/app/ui";
 import { PesquisaInternet } from "@/componentes/app/PesquisaInternet";
+import { FichaBase } from "@/componentes/app/FichaBase";
+import { PrimeiraMensagem } from "@/componentes/app/PrimeiraMensagem";
 import { HistoricoDivida } from "@/componentes/app/HistoricoDivida";
 
 export default function Ficha({ params }: { params: Promise<{ cnpj: string }> }) {
@@ -81,6 +84,7 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
             </Botao>
           )}
           <Botao disabled={novaNota.isPending} onClick={() => novaNota.mutate()}><NotePencil size={15} /> Nova nota</Botao>
+          <Botao className="print:hidden" onClick={() => window.print()}><Printer size={15} /> Imprimir</Botao>
         </div>
       </header>
 
@@ -234,6 +238,11 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
           </Superficie>
 
           {(d.cnpj ?? cnpj).length === 14 && <PesquisaInternet cnpj={d.cnpj ?? cnpj} temLead={!!d.lead} />}
+          {(d.cnpj ?? cnpj).length === 14 && (
+            <PrimeiraMensagem cnpj={d.cnpj ?? cnpj}
+              telefone={contatos.find((c) => c.tipo === "telefone" && /^\d{2}9\d{8}$/.test(String(c.valor).replace(/\D/g, "")))?.valor}
+              email={contatos.find((c) => c.tipo === "email" && !c.provavel_contador)?.valor} />
+          )}
 
           {d.estadual_sp?.length > 0 && (
             <Superficie titulo="Dívida estadual em SP" acao={<span className="text-xs text-aco">transação PGE-SP</span>}>
@@ -260,6 +269,8 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
           )}
 
           <DividaEstadual cnpj={d.cnpj ?? cnpj} ufSugerida={end?.uf ?? dev?.uf} />
+
+          {(d.cnpj ?? cnpj).length === 14 && <FichaBase cnpj={d.cnpj ?? cnpj} />}
 
           {cad && (
             <Superficie titulo="Cadastro">

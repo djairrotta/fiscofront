@@ -52,7 +52,7 @@ export function FormularioEntrar({ destino, comecaEm = "login" }:
       <p className="mt-2 text-sm text-aco">
         {modo === "login"
           ? "Use o e-mail cadastrado no escritório."
-          : "A conta já entra no plano Documentação."}
+          : "A conta já entra no plano Pesquisa."}
       </p>
 
       <form onSubmit={enviar} className="mt-7 space-y-4" noValidate>
@@ -64,9 +64,10 @@ export function FormularioEntrar({ destino, comecaEm = "login" }:
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="oab" className="text-sm font-medium">
-                OAB <span className="font-normal text-aco">(opcional)</span>
+                CRC <span className="font-normal text-aco">(opcional)</span>
               </label>
-              <input id="oab" name="oab" placeholder="SP 341.378" className={campo} />
+              {/* O campo segue com name="oab" porque e o nome que a API espera. */}
+              <input id="oab" name="oab" placeholder="SP-123456/O" className={campo} />
             </div>
           </>
         )}
