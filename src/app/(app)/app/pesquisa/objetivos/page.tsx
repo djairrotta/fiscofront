@@ -11,6 +11,7 @@ import { ArrowLeft, ChartBar, MagnifyingGlass, Sparkle, Target } from "@phosphor
 import { api, qs } from "@/lib/api";
 import { num } from "@/lib/formato";
 import { resumoFiltros } from "@/lib/busca";
+import { useNomesCidades } from "@/lib/useCidades";
 import { AvisoErro, Botao, Campo, Rotulo, Superficie } from "@/componentes/app/ui";
 
 const EXEMPLOS = [
@@ -18,6 +19,11 @@ const EXEMPLOS = [
   "Escritório de consultoria tributária: empresas de SP que perderam o Simples ou tiveram o parcelamento rescindido",
   "Quero clientes de BPO financeiro: empresas pequenas de serviços em Belo Horizonte com e-mail",
 ];
+
+function Resumo({ filtros }: { filtros: Record<string, string> }) {
+  const cidades = useNomesCidades(filtros.municipio);
+  return <>{resumoFiltros(filtros, cidades).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}</>;
+}
 
 function Contagem({ filtros }: { filtros: Record<string, string> }) {
   const c = useQuery({ queryKey: ["busca-previa", filtros], queryFn: () => api<any>(`/busca/contagem${qs(filtros)}`), staleTime: 60_000 });
@@ -56,7 +62,7 @@ export default function Objetivos() {
             <li key={i} className="flex flex-col rounded-[10px] border border-linha bg-papel p-4">
               <p className="font-semibold">{x.titulo}</p>
               <p className="mt-1 text-sm text-aco">{x.porque}</p>
-              <div className="mt-2 flex flex-1 flex-wrap content-start gap-1">{resumoFiltros(x.filtros).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}</div>
+              <div className="mt-2 flex flex-1 flex-wrap content-start gap-1"><Resumo filtros={x.filtros} /></div>
               {x.avisos?.length > 0 && <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{x.avisos.join(" ")}</p>}
               <p className="mt-3 text-sm"><Contagem filtros={x.filtros} /> empresas</p>
               <div className="mt-2 flex gap-1.5">

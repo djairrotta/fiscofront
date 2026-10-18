@@ -12,6 +12,7 @@ import { ArrowLeft, DownloadSimple, FileCsv, FileXls, Printer } from "@phosphor-
 import { api, qs } from "@/lib/api";
 import { num } from "@/lib/formato";
 import { resumoFiltros } from "@/lib/busca";
+import { useNomesCidades } from "@/lib/useCidades";
 import { Campo, Esqueleto, Rotulo, Superficie } from "@/componentes/app/ui";
 
 const MODELOS: Record<string, { rotulo: string; colunas: string[] }> = {
@@ -23,6 +24,7 @@ const MODELOS: Record<string, { rotulo: string; colunas: string[] }> = {
 function Conteudo() {
   const sp = useSearchParams();
   const filtros = useMemo(() => Object.fromEntries([...sp.entries()].filter(([k, v]) => v && k !== "pagina")), [sp]);
+  const cidades = useNomesCidades(filtros.municipio);
   const cols = useQuery({ queryKey: ["busca-colunas"], queryFn: () => api<any[]>("/busca/colunas"), staleTime: Infinity });
   const cont = useQuery({ queryKey: ["busca-previa", filtros], queryFn: () => api<any>(`/busca/contagem${qs(filtros)}`) });
   const [sel, setSel] = useState<string[]>([]);
@@ -42,7 +44,7 @@ function Conteudo() {
     <div className="mx-auto max-w-[1000px] p-5 md:p-8">
       <Link href={`/app/pesquisa${qs(filtros)}`} className="inline-flex items-center gap-1 text-sm text-aco hover:text-tinta"><ArrowLeft size={14} /> Voltar para a pesquisa</Link>
       <h1 className="mt-2 text-xl font-semibold tracking-tight">Exportar empresas</h1>
-      <div className="mt-2 flex flex-wrap gap-1">{resumoFiltros(filtros).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}</div>
+      <div className="mt-2 flex flex-wrap gap-1">{resumoFiltros(filtros, cidades).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}</div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-[1fr_280px]">
         <Superficie titulo="Colunas" acao={

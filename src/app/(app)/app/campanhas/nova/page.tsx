@@ -13,6 +13,7 @@ import Link from "next/link";
 import { api, qs } from "@/lib/api";
 import { num } from "@/lib/formato";
 import { resumoFiltros } from "@/lib/busca";
+import { useNomesCidades } from "@/lib/useCidades";
 import { VARIAVEIS } from "@/lib/campanhas";
 import { AvisoErro, Botao, Campo, Rotulo, Selecao, Superficie } from "@/componentes/app/ui";
 
@@ -21,6 +22,7 @@ function Conteudo() {
   const router = useRouter();
   const qc = useQueryClient();
   const filtrosUrl = useMemo(() => Object.fromEntries([...sp.entries()].filter(([k, v]) => v && !["pagina", "canal", "lista"].includes(k))), [sp]);
+  const cidades = useNomesCidades(filtrosUrl.municipio);
   const [origem, setOrigem] = useState<"pesquisa" | "lista">(sp.get("lista") ? "lista" : "pesquisa");
   const [listaId, setListaId] = useState(sp.get("lista") ?? "");
   const [canal, setCanal] = useState<"email" | "whatsapp">(sp.get("canal") === "whatsapp" ? "whatsapp" : "email");
@@ -51,7 +53,7 @@ function Conteudo() {
     mutationFn: async () => {
       const c = await api<any>("/campanhas", {
         method: "POST", json: {
-          nome: nome || (origem === "lista" ? listas.data?.find((l) => l.id === listaId)?.nome : resumoFiltros(filtrosUrl).slice(0, 3).join(" · ")) || "Campanha",
+          nome: nome || (origem === "lista" ? listas.data?.find((l) => l.id === listaId)?.nome : resumoFiltros(filtrosUrl, cidades).slice(0, 3).join(" · ")) || "Campanha",
           canal, assunto, corpo, origem: origem === "lista" ? { lista_id: listaId } : { filtros: filtrosUrl },
           ...cfg, limite_dia: cfg.limite_dia || undefined, intervalo_s: cfg.intervalo_s || undefined,
           remetente_nome: cfg.remetente_nome || perfil.data?.assinatura?.split("·")[0]?.trim() || undefined,
@@ -94,7 +96,7 @@ function Conteudo() {
               </div>
               {origem === "pesquisa" ? (
                 Object.keys(filtrosUrl).length ? (
-                  <div className="flex flex-wrap gap-1">{resumoFiltros(filtrosUrl).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}
+                  <div className="flex flex-wrap gap-1">{resumoFiltros(filtrosUrl, cidades).map((c) => <span key={c} className="rounded-full bg-fundo px-2 py-0.5 text-xs">{c}</span>)}
                     <Link href={`/app/pesquisa${qs(filtrosUrl)}`} className="text-xs text-acento underline">mudar filtros</Link></div>
                 ) : <p className="text-sm text-aco">Abra a <Link href="/app/pesquisa" className="text-acento underline">pesquisa de empresas</Link>, filtre e use “Enviar campanha”.</p>
               ) : (

@@ -84,7 +84,7 @@ export default function Ficha({ params }: { params: Promise<{ cnpj: string }> })
             </Botao>
           )}
           <Botao disabled={novaNota.isPending} onClick={() => novaNota.mutate()}><NotePencil size={15} /> Nova nota</Botao>
-          <Botao className="print:hidden" onClick={() => window.print()}><Printer size={15} /> Imprimir</Botao>
+          <Link href={`/app/empresas/${d.cnpj ?? cnpj}/relatorio`} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-linha bg-papel px-3.5 text-sm font-medium hover:bg-acento-fundo print:hidden"><Printer size={15} /> Relatório para o cliente</Link>
         </div>
       </header>
 

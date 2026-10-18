@@ -87,11 +87,12 @@ function Conteudo() {
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <S titulo="Por estado">
+            {d.por_municipio.length > 1 && (<>
+            {d.por_uf.length > 1 && <S titulo="Por estado">
               <MapaUfs dados={conv(d.por_uf).map((x) => ({ uf: x.chave, valor_total: x.n, empresas: x.n }))}
                 selecionada={filtros.uf && !filtros.uf.includes(",") ? filtros.uf : null}
                 aoEscolher={(uf) => uf && ir({ uf, municipio: "" })} formatar={(v) => `${qtd(v)} empresas`} rotulo="Empresas por estado" />
-            </S>
+            </S>}
             <S titulo="Mapa por município"><MapaPontos dados={d.por_municipio} /></S>
             <S titulo="Municípios com mais empresas">
               <GraficoBarras dados={conv(d.por_municipio).slice(0, 15)} x="chave" y="n" horizontal altura={360} formatar={qtd}
@@ -104,6 +105,7 @@ function Conteudo() {
                 aoClicar={(l) => ir({ municipio: l.ibge })} />
               <p className="mt-1 text-[11px] text-aco">Municípios com 20 mil habitantes ou mais (população do IBGE).</p>
             </S>
+            </>)}
             <S titulo="Bairros com mais empresas">
               <GraficoBarras dados={conv(d.por_bairro).slice(0, 15).map((b) => (d.por_municipio.length === 1 ? { ...b, chave: b.chave.split(" · ")[0] } : b))} x="chave" y="n" horizontal altura={360} formatar={qtd} />
             </S>
