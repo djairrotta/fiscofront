@@ -21,7 +21,7 @@ import { SeletorCnae } from "@/componentes/app/SeletorCnae";
 
 const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 const CHAVES_BUSCA = [
-  "q", "lista", "email", "telefone", "secao", "cnae", "cnae_secundario", "uf", "municipio", "bairro", "cep", "logradouro", "numero",
+  "q", "lista", "marca", "sem_marca", "email", "telefone", "secao", "cnae", "cnae_secundario", "uf", "municipio", "bairro", "cep", "logradouro", "numero",
   "raio_km", "raio_municipio", "hab_min", "hab_max", "situacao", "situacao_de", "situacao_ate", "matriz", "filiais_min",
   "natureza", "abertura_de", "abertura_ate", "idade_min", "idade_max", "porte", "mei", "simples", "regime", "faturamento",
   "capital_min", "capital_max", "socios_min", "socios_max", "contato", "ocultar_contador", "recuperacao",
@@ -123,6 +123,7 @@ function Conteudo() {
   });
   const buscas = useQuery({ queryKey: ["buscas"], queryFn: () => api<any[]>("/buscas") });
   const listas = useQuery({ queryKey: ["listas"], queryFn: () => api<any[]>("/listas"), staleTime: 60_000 });
+  const marcas = useQuery({ queryKey: ["busca-marcas"], queryFn: () => api<any>("/busca/marcas"), staleTime: 3600_000 });
   const tributos = useQuery({ queryKey: ["tributos"], queryFn: () => api<any[]>("/devedores/tributos"), staleTime: 3600_000 });
 
   const [textoIa, setTextoIa] = useState("");
@@ -380,6 +381,12 @@ function Conteudo() {
             </div>
           </Secao>
 
+          <Secao titulo="6. Bases públicas" n={ativos(rascunho, ["marca", "sem_marca"])}>
+            <BasesExtras dados={marcas.data} valor={rascunho.marca} aoMudar={(v) => r("marca", v)} />
+            <label className="flex cursor-pointer items-start gap-1.5 text-sm"><input type="checkbox" className="mt-1" checked={rascunho.sem_marca === "ceis,cnep,lista_suja"} onChange={(e) => r("sem_marca", e.target.checked ? "ceis,cnep,lista_suja" : "")} />
+              <span>Excluir empresas com sanção<span className="block text-xs text-aco">CEIS, CNEP (CGU) e cadastro de empregadores do MTE.</span></span></label>
+          </Secao>
+
           <div className="rounded-[10px] border border-linha bg-papel p-3">
             <Rotulo>Ordenar por</Rotulo>
             <Selecao value={rascunho.ordem} onChange={(e) => r("ordem", e.target.value)}>
@@ -444,6 +451,49 @@ function Conteudo() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+const GRUPOS_MARCA: { fonte: string; titulo: string; rot?: Record<string, string>; max?: number }[] = [
+  { fonte: "ecf_regime", titulo: "Regime tributário (ECF)", rot: { real: "Lucro Real", presumido: "Lucro Presumido", arbitrado: "Lucro Arbitrado", imune_isenta: "Imune/isenta" } },
+  { fonte: "parcelamento", titulo: "Parcelamento na Receita", rot: { simples: "Simples", simples_especial: "Simples (especial)", mei: "MEI", mei_especial: "MEI (especial)", ordinario: "Ordinário", especial: "Especial" } },
+  { fonte: "incentivo", titulo: "Incentivo deduzido no IRPJ", rot: { pat: "PAT", empresa_cidada: "Empresa Cidadã", rouanet: "Lei Rouanet", desporto: "Desporto", prouni: "ProUni", fia: "Fundo da criança", fundo_idoso: "Fundo do idoso", perse: "PERSE", rota_2030: "Rota 2030", padis: "PADIS", audiovisual: "Audiovisual", pronon: "PRONON", pronas: "PRONAS" } },
+  { fonte: "sisen", titulo: "Benefício fiscal habilitado (SISEN)", max: 12 },
+  { fonte: "lei_do_bem", titulo: "Lei do Bem (P&D)", rot: { aprovada: "Teve incentivo aprovado" } },
+  { fonte: "anp", titulo: "Setores regulados", rot: { posto_combustivel: "Posto de combustível (ANP)" } },
+  { fonte: "rntrc", titulo: "Transportador (RNTRC)", max: 4 },
+  { fonte: "ceis", titulo: "Sanção CEIS (CGU)", max: 0 },
+  { fonte: "cnep", titulo: "Sanção CNEP (CGU)", max: 0 },
+  { fonte: "lista_suja", titulo: "Cadastro de empregadores (MTE)", max: 0 },
+];
+const titulo1 = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+
+function BasesExtras({ dados, valor, aoMudar }: { dados: any; valor: string; aoMudar: (v: string) => void }) {
+  if (!dados) return <p className="text-xs text-aco">Carregando…</p>;
+  if (!dados.tipos?.length) return <p className="text-xs text-aco">As bases públicas extras ainda não foram carregadas.</p>;
+  const sel = new Set(valor ? valor.split(",") : []);
+  const alternar = (k: string) => { sel.has(k) ? sel.delete(k) : sel.add(k); aoMudar([...sel].join(",")); };
+  return (
+    <div className="space-y-2.5">
+      {GRUPOS_MARCA.map((g) => {
+        const tipos = (dados.tipos as any[]).filter((t) => t.fonte === g.fonte);
+        if (!tipos.length) return null;
+        const opcoes: [string, string, number][] = g.max === 0
+          ? [[g.fonte, "Qualquer sanção", tipos.reduce((a, t) => a + Number(t.empresas), 0)]]
+          : tipos.slice(0, g.max ?? 20).map((t) => [`${g.fonte}:${t.tipo}`, g.rot?.[t.tipo] ?? titulo1(t.tipo), Number(t.empresas)]);
+        return (
+          <div key={g.fonte}>
+            <Rotulo>{g.titulo}</Rotulo>
+            <div className="flex flex-wrap gap-1">
+              {opcoes.map(([k, r, n]) => (
+                <button key={k} type="button" aria-pressed={sel.has(k)} onClick={() => alternar(k)} title={`${num(n)} empresas`}
+                  className={`max-w-full cursor-pointer truncate rounded-full border px-2.5 py-1 text-xs ${sel.has(k) ? "border-acento bg-acento text-white" : "border-linha bg-papel text-aco hover:border-acento"}`}>{r}</button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

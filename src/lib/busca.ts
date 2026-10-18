@@ -51,5 +51,7 @@ export function resumoFiltros(f: Record<string, string>, cidades?: Map<string, s
   if (f.acordo) r.push(`acordo: ${f.acordo}`);
   if (f.programa) r.push(`programa: ${f.programa}`);
   if (f.estadual) r.push("dívida estadual SP");
+  if (f.marca) r.push(...f.marca.split(",").map((m) => m.replace(/^ecf_regime:/, "regime ").replace(/^parcelamento:/, "parcelamento ").replace(/^incentivo:/, "incentivo ").replace(/^sisen:/, "").replace(/_/g, " ").toLowerCase()));
+  if (f.sem_marca) r.push("sem sanção");
   return r;
 }

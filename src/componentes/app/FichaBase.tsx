@@ -9,9 +9,18 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Buildings } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
-import { cnpjMascara, dataBr, telefoneFmt } from "@/lib/formato";
+import { brl, cnpjMascara, dataBr, telefoneFmt } from "@/lib/formato";
 import { Esqueleto, Selo, Superficie } from "./ui";
 
+const ROT_FONTE: Record<string, string> = {
+  ecf_regime: "Regime (ECF)", sisen: "Benefício fiscal", incentivo: "Incentivo no IRPJ", parcelamento: "Parcelamento na Receita",
+  ceis: "Sanção CEIS", cnep: "Sanção CNEP", lista_suja: "Cadastro de empregadores (MTE)", lei_do_bem: "Lei do Bem", anp: "ANP", rntrc: "RNTRC",
+};
+const ROT_TIPO: Record<string, string> = {
+  real: "Lucro Real", presumido: "Lucro Presumido", arbitrado: "Lucro Arbitrado", imune_isenta: "imune/isenta", pat: "PAT",
+  empresa_cidada: "Empresa Cidadã", simples: "Simples Nacional", mei: "MEI", ordinario: "ordinário", aprovada: "incentivo aprovado",
+  posto_combustivel: "posto de combustível",
+};
 const SIT: Record<number, string> = { 1: "nula", 2: "ativa", 3: "suspensa", 4: "inapta", 8: "baixada" };
 
 export function FichaBase({ cnpj }: { cnpj: string }) {
@@ -38,6 +47,14 @@ export function FichaBase({ cnpj }: { cnpj: string }) {
             {d.secundarios.length > 0 && (
               <div className="grid grid-cols-[110px_1fr] gap-2 px-4 py-2"><dt className="text-xs text-aco">Atividades secundárias</dt>
                 <dd><ul className="space-y-0.5 text-[13px]">{d.secundarios.map((c: any) => <li key={c.codigo}><span className="font-mono text-xs tabular text-aco">{c.codigo}</span> {c.descricao}</li>)}</ul></dd></div>
+            )}
+            {d.marcas?.length > 0 && (
+              <div className="grid grid-cols-[110px_1fr] gap-2 px-4 py-2"><dt className="text-xs text-aco">Bases públicas</dt>
+                <dd><ul className="space-y-0.5 text-[13px]">{d.marcas.map((m: any, i: number) => (
+                  <li key={i}><span className="text-xs text-aco">{ROT_FONTE[m.fonte] ?? m.fonte}:</span> {ROT_TIPO[m.tipo] ?? m.tipo.toLowerCase()}
+                    {m.ano && <span className="text-aco"> ({m.ano})</span>}{m.valor != null && Number(m.valor) > 0 && <span className="font-mono text-xs"> · {brl(Number(m.valor))}</span>}
+                    {m.detalhe?.fim && <span className="text-xs text-aco"> · até {dataBr(m.detalhe.fim)}</span>}</li>
+                ))}</ul></dd></div>
             )}
             {(e.email_contador || e.telefone_contador) && (
               <p className="px-4 py-2 text-xs text-aco">O {[e.email_contador && "e-mail", e.telefone_contador && "telefone"].filter(Boolean).join(" e o ")} do cadastro aparece em várias empresas: provavelmente é do escritório de contabilidade.</p>
