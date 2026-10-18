@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, X } from "@phosphor-icons/react";
 import { api, qs } from "@/lib/api";
 import { brl, num, posicao, dataBr, COR_FASE } from "@/lib/formato";
@@ -25,6 +25,9 @@ export default function Painel() {
   const painel = useQuery({ queryKey: ["painel", uf], queryFn: () => api(`/painel${qs({ uf })}`) });
   const funil = useQuery({ queryKey: ["leads-resumo"], queryFn: () => api("/leads-resumo") });
   const programas = useQuery({ queryKey: ["programas"], queryFn: () => api<any[]>("/programas"), staleTime: 3600_000 });
+  const qc = useQueryClient();
+  const alertas = useQuery({ queryKey: ["alertas"], queryFn: () => api<any[]>("/alertas") });
+  const lidos = useMutation({ mutationFn: () => api("/alertas/lidos", { method: "POST", json: {} }), onSuccess: () => qc.invalidateQueries({ queryKey: ["alertas"] }) });
   const abertos = (programas.data ?? []).filter((p) => p.estado === "aberto").sort((a, b) => a.dias - b.dias);
   const d: any = painel.data;
   const ir = (f: Record<string, unknown>) => router.push(`/app/devedores${qs({ uf, ...f })}`);
@@ -48,6 +51,21 @@ export default function Painel() {
       </header>
 
       <div className="mt-5"><AvisoErro erro={painel.error} /></div>
+
+      {(alertas.data?.length ?? 0) > 0 && (
+        <section className="mt-4 rounded-[10px] border border-amber-200 bg-amber-50 px-5 py-4 dark:border-amber-900 dark:bg-amber-950">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-semibold">{alertas.data!.length} mudança(s) na sua carteira</p>
+            <button type="button" onClick={() => lidos.mutate()} className="cursor-pointer text-xs text-acento hover:underline">marcar como lidas</button>
+          </div>
+          <ul className="mt-2 space-y-1 text-sm">
+            {alertas.data!.slice(0, 8).map((a) => (
+              <li key={a.id}><Link href={`/app/empresas/${a.cnpj}`} className="hover:underline">{a.texto}</Link>
+                <span className="ml-1 text-xs text-aco">{new Date(a.criado_em).toLocaleDateString("pt-BR")}</span></li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {abertos.length > 0 && (
         <Link href="/app/acordos" className="mt-4 block rounded-[10px] border border-linha bg-papel px-5 py-4 hover:bg-acento-fundo/40">

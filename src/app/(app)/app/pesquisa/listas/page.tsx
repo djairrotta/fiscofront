@@ -42,6 +42,10 @@ export default function Listas() {
     mutationFn: (id: string) => api<any>(`/listas/${id}/perfil`),
     onSuccess: (r) => { if (!Object.keys(r.filtros).length) { setMsg(r.explicacao || "A lista não tem um padrão forte o bastante."); return; } router.push(`/app/pesquisa${qs({ ...r.filtros, divida: "" })}`); },
   });
+  const monitorar = useMutation({
+    mutationFn: ({ id, v }: { id: string; v: boolean }) => api(`/listas/${id}/monitorar`, { method: "PUT", json: { monitorar: v } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["listas"] }),
+  });
   const apagar = useMutation({ mutationFn: (id: string) => api(`/listas/${id}`, { method: "DELETE" }), onSuccess: () => qc.invalidateQueries({ queryKey: ["listas"] }) });
 
   const lerArquivo = async (f: File) => {
@@ -100,7 +104,10 @@ export default function Listas() {
               <p className="text-xs text-aco">{num(l.total)} CNPJs · {new Date(l.criado_em).toLocaleDateString("pt-BR")}
                 {Number(l.fila_pendente) > 0 && ` · ${num(l.fila_pendente)} na fila da internet`}{Number(l.fila_feito) > 0 && ` · ${num(l.fila_feito)} pesquisadas`}</p>
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <label className="mr-1 flex cursor-pointer items-center gap-1.5 text-xs" title="Avisa no painel e por e-mail quando muda a situação, o regime ou a dívida federal de uma empresa da lista">
+                <input type="checkbox" checked={!!l.monitorar} disabled={monitorar.isPending} onChange={(e) => monitorar.mutate({ id: l.id, v: e.target.checked })} /> Monitorar
+              </label>
               <Link href={`/app/pesquisa?lista=${l.id}&situacao=todas`} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-acento px-3 text-[13px] font-medium text-white hover:opacity-90"><MagnifyingGlass size={13} /> Pesquisar</Link>
               <Botao tamanho="p" disabled={ideal.isPending} onClick={() => ideal.mutate(l.id)} title="Pesquisa empresas parecidas com as da lista (atividade, região, porte, regime)"><Target size={13} /> Cliente ideal</Botao>
               <Botao tamanho="p" disabled={enriquecer.isPending} onClick={() => enriquecer.mutate(l.id)}><Globe size={13} /> Pesquisar na internet</Botao>
