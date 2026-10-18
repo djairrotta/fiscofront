@@ -99,7 +99,7 @@ export default function Acordos() {
                 <span>{p.base_legal} · conferido em {dataBr(p.verificado_em)}</span>
                 <span className="flex flex-wrap gap-3">
                   {filtro && p.estado !== "encerrado" && (
-                    <Link href={`/app/pesquisa${qs(filtro)}`} className="inline-flex items-center gap-1 font-medium text-acento hover:underline dark:text-acento-claro">
+                    <Link href={`/app/devedores${qs(filtro)}`} className="inline-flex items-center gap-1 font-medium text-acento hover:underline dark:text-acento-claro">
                       <MagnifyingGlass size={12} /> Empresas que podem caber
                     </Link>
                   )}

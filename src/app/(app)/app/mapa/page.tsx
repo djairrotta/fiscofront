@@ -42,7 +42,7 @@ export default function Mapa() {
                 <tbody>
                   {mun.data.slice(0, 100).map((m) => (
                     <tr key={m.municipio_ibge} className="cursor-pointer border-b border-linha last:border-0 hover:bg-acento-fundo/40"
-                      onClick={() => router.push(`/app/pesquisa${qs({ municipio: m.municipio_ibge })}`)}>
+                      onClick={() => router.push(`/app/devedores${qs({ municipio: m.municipio_ibge })}`)}>
                       <td className="px-4 py-2">{m.municipio}</td>
                       <td className="py-2 text-right font-mono tabular">{num(m.empresas_com_divida)}</td>
                       <td className="py-2 text-right font-mono tabular text-aco">{brl(m.divida_mediana, true)}</td>

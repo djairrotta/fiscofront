@@ -45,7 +45,7 @@ export default function Teses() {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-aco">
                 <span>{x.verificada_em ? `Verificada em ${dataBr(x.verificada_em)}` : "Sem data de verificação"}</span>
                 {x.maturidade !== "derrotada" && tributos.length > 0 && (
-                  <Link href={`/app/pesquisa${qs({ tributo: tributos.join(",") })}`} className="inline-flex items-center gap-1 font-medium text-acento hover:underline dark:text-acento-claro">
+                  <Link href={`/app/devedores${qs({ tributo: tributos.join(",") })}`} className="inline-flex items-center gap-1 font-medium text-acento hover:underline dark:text-acento-claro">
                     Devedoras de {tributos.join("/")} <ArrowRight size={12} />
                   </Link>
                 )}

@@ -27,7 +27,7 @@ export default function Painel() {
   const programas = useQuery({ queryKey: ["programas"], queryFn: () => api<any[]>("/programas"), staleTime: 3600_000 });
   const abertos = (programas.data ?? []).filter((p) => p.estado === "aberto").sort((a, b) => a.dias - b.dias);
   const d: any = painel.data;
-  const ir = (f: Record<string, unknown>) => router.push(`/app/pesquisa${qs({ uf, ...f })}`);
+  const ir = (f: Record<string, unknown>) => router.push(`/app/devedores${qs({ uf, ...f })}`);
 
   return (
     <div className="mx-auto max-w-[1400px] p-5 md:p-8">
@@ -137,7 +137,7 @@ export default function Painel() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
         <Superficie titulo="Maiores devedoras"
-          acao={<Link href={`/app/pesquisa${qs({ uf })}`} className="inline-flex items-center gap-1 text-xs text-acento hover:underline dark:text-acento-claro">Ver todas <ArrowRight size={12} /></Link>}>
+          acao={<Link href={`/app/devedores${qs({ uf })}`} className="inline-flex items-center gap-1 text-xs text-acento hover:underline dark:text-acento-claro">Ver todas <ArrowRight size={12} /></Link>}>
           <table className="w-full text-sm">
             <tbody>
               {(d?.top_devedores ?? []).map((e: any) => (
@@ -189,7 +189,7 @@ export default function Painel() {
               <ul className="divide-y divide-linha">
                 {d.top_municipios.slice(0, 8).map((m: any) => (
                   <li key={m.municipio_ibge}>
-                    <button type="button" onClick={() => router.push(`/app/pesquisa${qs({ municipio: m.municipio_ibge })}`)}
+                    <button type="button" onClick={() => router.push(`/app/devedores${qs({ municipio: m.municipio_ibge })}`)}
                       className="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm hover:bg-acento-fundo/40">
                       <span>{m.municipio} <span className="text-aco">· {m.uf}</span></span>
                       <span className="font-mono tabular text-aco">{brl(m.valor_total, true)}</span>
